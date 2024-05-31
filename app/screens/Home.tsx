@@ -1,49 +1,31 @@
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import React from 'react';
-import { View, TouchableOpacity, Image, Text, StyleSheet, Dimensions } from 'react-native';
-import { NavigationProp } from '@react-navigation/native';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
 
-interface RouterProps {
-    navigation: NavigationProp<any, any>;
-}
-
-const Home = ({ navigation }: RouterProps) => {
-    const username = 'Calvin';
-
+const Home = () => {
     const handleLogout = () => {
         FIREBASE_AUTH.signOut();
     };
-
     return (
         <View style={styles.container}>
-            <TouchableOpacity onPress={() => navigation.navigate('Next Page')}>
-                <Image source={require('../../assets/loadingscreen2.png')} style={styles.image} />
-            </TouchableOpacity>
+            <Text style={styles.text}>Hello! Nothing much to see here</Text>
             <View style={styles.logoutButtonContainer}>
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
             </View>
-            <Text style={styles.overlayText}>Hello, {username}</Text>
         </View>
     );
 }
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        paddingTop: 20,
-        paddingBottom: 20,
     },
-    image: {
-        width: 500,
-        height: 1000,
-        resizeMode: 'contain',
+    text: {
+        textAlign: 'center',
     },
     logoutButtonContainer: {
         position: 'absolute',
@@ -60,16 +42,7 @@ const styles = StyleSheet.create({
     logoutButtonText: {
         color: '#fff',
         textAlign: 'center',
-    },
-    overlayText: {
-        position: 'absolute',
-        top: '50%',
-        left: 200,
-        transform: [{ translateX: -width * 0.25 }, { translateY: -10 }],
-        fontSize: 24,
-        color: '#fff',
-        fontWeight: 'bold',
-    },
+    }
 });
 
 export default Home;

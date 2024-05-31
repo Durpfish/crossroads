@@ -1,8 +1,8 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './app/screens/Login';
+import Welcome from './app/screens/Welcome';
 import Home from './app/screens/Home';
-import NextPage from './app/screens/NextPage';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { FIREBASE_AUTH } from './firebaseConfig';
@@ -13,8 +13,8 @@ const InsideStack = createNativeStackNavigator();
 function InsideLayout() {
   return (
     <InsideStack.Navigator>
+      <InsideStack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }}/>
       <InsideStack.Screen name="Home" component={Home} options={{ headerShown: false }}/>
-      <InsideStack.Screen name="Next Page" component={NextPage} options={{ headerShown: false }}/>
     </InsideStack.Navigator>
   )
 }
