@@ -13,8 +13,8 @@ const InsideStack = createNativeStackNavigator();
 function InsideLayout() {
   return (
     <InsideStack.Navigator>
-      <InsideStack.Screen name="Home" component={Home}/>
-      <InsideStack.Screen name="Next Page" component={NextPage}/>
+      <InsideStack.Screen name="Home" component={Home} options={{ headerShown: false }}/>
+      <InsideStack.Screen name="Next Page" component={NextPage} options={{ headerShown: false }}/>
     </InsideStack.Navigator>
   )
 }
