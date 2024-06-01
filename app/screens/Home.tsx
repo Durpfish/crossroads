@@ -15,7 +15,7 @@ const Home = () => {
                 </TouchableOpacity>
             </View>
         </View>
-    );
+    ); 
 }
 
 const styles = StyleSheet.create({
