@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Image, Text, StyleSheet, Dimensions } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
@@ -8,7 +8,14 @@ interface RouterProps {
 }
 
 const Welcome = ({ navigation }: RouterProps) => {
-    const username = 'Calvin';
+    const [email, setEmail] = useState<string | null>(null);
+
+    useEffect(() => {
+        const user = FIREBASE_AUTH.currentUser;
+        if (user) {
+            setEmail(user.email);
+        }
+    }, []);
 
     const handleLogout = () => {
         FIREBASE_AUTH.signOut();
@@ -24,7 +31,7 @@ const Welcome = ({ navigation }: RouterProps) => {
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
             </View>
-            <Text style={styles.overlayText}>Hello, {username}</Text>
+            <Text style={styles.overlayText}>Hello,{'\n'}{email}</Text>
         </View>
     );
 }
@@ -64,11 +71,12 @@ const styles = StyleSheet.create({
     overlayText: {
         position: 'absolute',
         top: '50%',
-        left: 200,
+        left: 170,
         transform: [{ translateX: -width * 0.25 }, { translateY: -10 }],
         fontSize: 24,
         color: '#fff',
         fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
 
