@@ -1,25 +1,31 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button } from 'react-native';
 import React from 'react';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
-// import { Redirect } from 'expo-router'; // Ensure this is commented out if not used
+import { NavigationProp } from '@react-navigation/native';
 
-const Home = () => {
+interface RouterProps {
+    navigation: NavigationProp<any, any>;
+}
+
+const Home = ({ navigation }: RouterProps) => {
     const handleLogout = () => {
         FIREBASE_AUTH.signOut();
     };
 
-    return ( 
+    return (
         <View style={styles.container}>
-            <Header/>
+            <Header />
             <Text style={styles.text}>Hello! Nothing much to see here</Text>
+            <HomeHeader />
             <View style={styles.logoutButtonContainer}>
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
             </View>
-            <NavigationTab />
+
+            <NavigationTab navigation={navigation} />
         </View>
-    ); 
+    );
 };
 
 const Header = () => {
@@ -28,11 +34,21 @@ const Header = () => {
             <Text style={styles.headerText}>CrossRoads</Text>
         </View>
     );
-}
+};
 
-const NavigationTab = () => {
+const HomeHeader = () => {
+    return (
+        <View style={styles.homeContainer}>
+            <Text style={styles.homeText}>Home</Text>
+        </View>
+    );
+};
+
+const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
+        { name: "Events", icon: "🎫" },
+        { name: "Connect", icon: "🤝🏽" },
         { name: "Profile", icon: "👤" },
         { name: "Settings", icon: "⚙️" },
     ];
@@ -40,14 +56,18 @@ const NavigationTab = () => {
     return (
         <View style={styles.navigationTabContainer}>
             {tabs.map((tab, index) => (
-                <TouchableOpacity key={index} style={styles.tabButton}>
+                <TouchableOpacity
+                    key={index}
+                    style={styles.tabButton}
+                    onPress={() => navigation.navigate(tab.name)}
+                >
                     <Text style={styles.tabIcon}>{tab.icon}</Text>
                     <Text style={styles.tabText}>{tab.name}</Text>
                 </TouchableOpacity>
             ))}
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -70,6 +90,19 @@ const styles = StyleSheet.create({
         fontSize: 24,
         textAlign: 'center',
     },
+    homeContainer: {
+        top: -350,
+        width: '100%',
+        paddingVertical: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'red', // Debugging purposes
+    },
+    homeText: {
+        color: 'black',
+        fontSize: 24,
+        textAlign: 'center',
+    },
     text: {
         textAlign: 'center',
         fontSize: 18,
@@ -77,7 +110,7 @@ const styles = StyleSheet.create({
     },
     logoutButtonContainer: {
         position: 'absolute',
-        bottom: 60, // Adjusted to avoid overlap with navigation tab
+        bottom: 80, // Adjusted to avoid overlap with navigation tab
         width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
