@@ -15,7 +15,7 @@ const Home = ({ navigation }: RouterProps) => {
     return (
         <View style={styles.container}>
             <Header />
-            <Text style={styles.text}>Hello! Nothing much to see here</Text>
+            <Text style={styles.text}>Home Page</Text>
             <HomeHeader />
             <View style={styles.logoutButtonContainer}>
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
