@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, Button, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button, ScrollView } from 'react-native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
 import { collection, addDoc, query, where, getDocs, Timestamp, doc, updateDoc } from 'firebase/firestore';
@@ -36,11 +36,11 @@ const Events = ({ navigation }: RouterProps) => {
                 maxParticipants: maxParticipantsNumber,
                 currentParticipants: [],
                 timestamp: Timestamp.now(),
-                endTime: Timestamp.now().seconds + 12 * 60 * 60, // 12 hours from now in seconds
+                endTime: Timestamp.now().seconds + 12 * 60 * 60,
             });
             setTitle('');
             setMaxParticipants('');
-            fetchEvents(); // Refresh events list
+            fetchEvents();
         } catch (error) {
             console.error("Error listing event:", error);
         }
@@ -68,7 +68,8 @@ const Events = ({ navigation }: RouterProps) => {
                         await updateDoc(doc(FIREBASE_FIRESTORE, 'events', eventId), {
                             currentParticipants: [...currentParticipants, userId],
                         });
-                        fetchEvents(); // Refresh events list after joining
+                        alert('Successfully joined the event!');
+                        fetchEvents(); 
                     } catch (error) {
                         console.error("Error joining event:", error);
                     }
@@ -76,7 +77,16 @@ const Events = ({ navigation }: RouterProps) => {
                     alert('Maximum number of participants reached for this event.');
                 }
             } else {
-                alert('You have already joined this event.');
+                try {
+                    const updatedParticipants = currentParticipants.filter((participant) => participant !== userId);
+                    await updateDoc(doc(FIREBASE_FIRESTORE, 'events', eventId), {
+                        currentParticipants: updatedParticipants,
+                    });
+                    alert('Successfully left the event.');
+                    fetchEvents(); 
+                } catch (error) {
+                    console.error("Error leaving event:", error);
+                }
             }
         }
     };
@@ -87,6 +97,11 @@ const Events = ({ navigation }: RouterProps) => {
         const hours = Math.floor(remainingTime / 3600);
         const minutes = Math.floor((remainingTime % 3600) / 60);
         return `${hours}h ${minutes}m remaining`;
+    };
+
+    const isUserJoined = (currentParticipants: string[]) => {
+        const user = FIREBASE_AUTH.currentUser;
+        return user && currentParticipants.includes(user.uid);
     };
 
     return (
@@ -112,15 +127,15 @@ const Events = ({ navigation }: RouterProps) => {
             </View>
             <ScrollView style={styles.eventListContainer}>
                 {events.map((item) => (
-                    <TouchableOpacity key={item.id} onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={styles.eventContainer}>
+                    <View key={item.id} style={styles.eventContainer}>
                         <Text style={styles.eventTitle}>{item.title}</Text>
                         <Text style={styles.eventDetails}>
                             {calculateRemainingTime(item.endTime)} | Participants: {item.currentParticipants.length}/{item.maxParticipants}
                         </Text>
-                        <TouchableOpacity onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={styles.joinButton}>
-                            <Text style={styles.joinButtonText}>Join</Text>
+                        <TouchableOpacity onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={[styles.joinButton, { backgroundColor: isUserJoined(item.currentParticipants) ? 'red' : '#4CAF50' }]}>
+                            <Text style={styles.joinButtonText}>{isUserJoined(item.currentParticipants) ? 'Leave' : 'Join'}</Text>
                         </TouchableOpacity>
-                    </TouchableOpacity>
+                    </View>
                 ))}
             </ScrollView>
             <NavigationTab navigation={navigation} />
@@ -226,7 +241,6 @@ const styles = StyleSheet.create({
         marginTop: 5,
     },
     joinButton: {
-        backgroundColor: '#4CAF50',
         paddingVertical: 5,
         paddingHorizontal: 10,
         borderRadius: 5,

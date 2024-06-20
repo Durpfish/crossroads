@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity, Button } from 'react-native';
 import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
 
@@ -15,14 +15,35 @@ const Home = ({ navigation }: RouterProps) => {
     return (
         <View style={styles.container}>
             <Header />
-            <Text style={styles.text}>Home Page</Text>
-            <HomeHeader />
-            <View style={styles.logoutButtonContainer}>
+            <View style={styles.contentContainer}>
+                <Text style={styles.heading}>Welcome to CrossRoads</Text>
+                <Text style={styles.subHeading}>Explore, Connect, and Share</Text>
+
+                {/* Feature Section: News Feed */}
+                <TouchableOpacity style={styles.featureContainer} onPress={() => navigation.navigate('NewsFeed')}>
+                    <Text style={styles.featureText}>News Feed</Text>
+                    <Text style={styles.featureDescription}>Stay updated with posts from friends and communities</Text>
+                </TouchableOpacity>
+
+                {/* Feature Section: Events */}
+                <TouchableOpacity style={styles.featureContainer} onPress={() => navigation.navigate('Events')}>
+                    <Text style={styles.featureText}>Events</Text>
+                    <Text style={styles.featureDescription}>Discover and join events happening soon</Text>
+                </TouchableOpacity>
+
+                {/* Feature Section: Connect */}
+                <TouchableOpacity style={styles.featureContainer} onPress={() => navigation.navigate('Connect')}>
+                    <Text style={styles.featureText}>Connect</Text>
+                    <Text style={styles.featureDescription}>Meet new people near you</Text>
+                </TouchableOpacity>
+
+                {/* Logout Button */}
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
             </View>
 
+            {/* Navigation Tab */}
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -32,14 +53,6 @@ const Header = () => {
     return (
         <View style={styles.headerContainer}>
             <Text style={styles.headerText}>CrossRoads</Text>
-        </View>
-    );
-};
-
-const HomeHeader = () => {
-    return (
-        <View style={styles.homeContainer}>
-            <Text style={styles.homeText}>Home</Text>
         </View>
     );
 };
@@ -74,7 +87,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingTop: 50,
     },
     headerContainer: {
         position: 'absolute',
@@ -88,34 +100,46 @@ const styles = StyleSheet.create({
     headerText: {
         color: 'white',
         fontSize: 24,
-        textAlign: 'center',
     },
-    homeContainer: {
-        top: -350,
+    contentContainer: {
+        flex: 1,
         width: '100%',
-        paddingVertical: 0,
-        justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'red', // Debugging purposes
+        paddingHorizontal: 20,
+        paddingTop: 100,
     },
-    homeText: {
-        color: 'black',
+    heading: {
         fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 10,
         textAlign: 'center',
     },
-    text: {
+    subHeading: {
+        fontSize: 16,
+        color: 'gray',
+        marginBottom: 30,
         textAlign: 'center',
-        fontSize: 18,
-        marginVertical: 20,
     },
-    logoutButtonContainer: {
-        position: 'absolute',
-        bottom: 80, // Adjusted to avoid overlap with navigation tab
+    featureContainer: {
         width: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 10,
+        padding: 20,
+        marginBottom: 20,
+    },
+    featureText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    featureDescription: {
+        fontSize: 14,
+        color: 'gray',
     },
     logoutButton: {
+        position: 'absolute',
+        bottom: 20,
         backgroundColor: '#72bcd4',
         paddingVertical: 10,
         paddingHorizontal: 20,
@@ -142,7 +166,7 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 12,
-    }
+    },
 });
 
 export default Home;

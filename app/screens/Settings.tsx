@@ -1,41 +1,44 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import React, { useState } from 'react';
-import { FIREBASE_AUTH } from '../../firebaseConfig';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
+import { FIREBASE_AUTH } from '../../firebaseConfig';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
 const Settings = ({ navigation }: RouterProps) => {
-    const [profileImage, setProfileImage] = useState<string | null>(null);
-
     const handleLogout = () => {
         FIREBASE_AUTH.signOut();
     };
 
-    const handleImageUpload = async () => {
-        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (permissionResult.granted === false) {
-            alert("Permission to access camera roll is required!");
-            return;
-        }
+    const handleChangeDetails = () => {
+        // Navigate to a screen where users can update their profile details
+        navigation.navigate('EditProfile');
+    };
 
-        const pickerResult = await ImagePicker.launchImageLibraryAsync();
-        if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
-            const imageUri = pickerResult.assets[0].uri;
-            setProfileImage(imageUri);
-        }
+    const handleNotificationSettings = () => {
+        // Navigate to a screen where users can manage notification settings
+        navigation.navigate('NotificationSettings');
+    };
+
+    const handleAppInfo = () => {
+        // Navigate to a screen with information about the app
+        navigation.navigate('AppInfo');
     };
 
     return (
         <View style={styles.container}>
             <Header />
-            <SettingsHeader profileImage={profileImage} />
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity onPress={handleImageUpload} style={styles.uploadButton}>
-                    <Text style={styles.uploadButtonText}>Upload Profile Image</Text>
+            <View style={styles.optionContainer}>
+                <TouchableOpacity onPress={handleChangeDetails} style={styles.optionButton}>
+                    <Text style={styles.optionText}>Change Details</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleNotificationSettings} style={styles.optionButton}>
+                    <Text style={styles.optionText}>Notification Settings</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleAppInfo} style={styles.optionButton}>
+                    <Text style={styles.optionText}>App Information</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
                     <Text style={styles.logoutButtonText}>Log Out</Text>
@@ -50,21 +53,6 @@ const Header = () => {
     return (
         <View style={styles.headerContainer}>
             <Text style={styles.headerText}>CrossRoads</Text>
-        </View>
-    );
-};
-
-const SettingsHeader = ({ profileImage }: { profileImage: string | null }) => {
-    return (
-        <View style={styles.settingsContainer}>
-            {profileImage ? (
-                <Image source={{ uri: profileImage }} style={styles.profileImage} />
-            ) : (
-                <View style={styles.placeholderImage}>
-                    <Text style={styles.placeholderText}>No Image</Text>
-                </View>
-            )}
-            <Text style={styles.settingsText}>Profile</Text>
         </View>
     );
 };
@@ -115,72 +103,33 @@ const styles = StyleSheet.create({
         fontSize: 24,
         textAlign: 'center',
     },
-    settingsContainer: {
-        marginTop: -500,
+    optionContainer: {
         width: '100%',
-        paddingVertical: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f5f5f5',
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-    },
-    settingsText: {
-        color: 'black',
-        fontSize: 24,
-        textAlign: 'center',
-    },
-    profileImage: {
-        width: 100,
-        height: 50,
-        borderRadius: 50,
-        marginBottom: 20,
-    },
-    placeholderImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: '#e0e0e0',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    placeholderText: {
-        color: '#757575',
-        fontSize: 16,
-    },
-    text: {
-        textAlign: 'center',
-        fontSize: 18,
-        marginVertical: 20,
-    },
-    buttonContainer: {
-        position: 'absolute',
-        bottom: 100, 
-        width: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    uploadButton: {
-        backgroundColor: '#4CAF50',
-        paddingVertical: 10,
+        marginTop: 20,
         paddingHorizontal: 20,
-        borderRadius: 5,
-        marginBottom: 10,
     },
-    uploadButtonText: {
-        color: '#fff',
+    optionButton: {
+        backgroundColor: '#f0f0f0',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        marginBottom: 10,
+        borderRadius: 5,
+    },
+    optionText: {
+        fontSize: 18,
         textAlign: 'center',
     },
     logoutButton: {
         backgroundColor: '#ff6347',
-        paddingVertical: 10,
+        paddingVertical: 15,
         paddingHorizontal: 20,
+        marginBottom: 10,
         borderRadius: 5,
     },
     logoutButtonText: {
         color: '#fff',
         textAlign: 'center',
+        fontSize: 18,
     },
     navigationTabContainer: {
         position: 'absolute',
@@ -201,6 +150,5 @@ const styles = StyleSheet.create({
         fontSize: 12,
     }
 });
-
 
 export default Settings;
