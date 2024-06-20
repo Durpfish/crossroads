@@ -24,7 +24,7 @@ const MessageScreen = ({ navigation }: RouterProps) => {
   useEffect(() => {
     const messagesQuery = query(
       collection(DATABASE, 'messages'),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'asc')
     );
 
     const unsubscribe = onSnapshot(messagesQuery, querySnapshot => {

@@ -1,28 +1,46 @@
-import { View, Text, StyleSheet, TouchableOpacity, Button } from 'react-native';
-import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
 const Settings = ({ navigation }: RouterProps) => {
+    const [profileImage, setProfileImage] = useState<string | null>(null);
+
     const handleLogout = () => {
         FIREBASE_AUTH.signOut();
+    };
+
+    const handleImageUpload = async () => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (permissionResult.granted === false) {
+            alert("Permission to access camera roll is required!");
+            return;
+        }
+
+        const pickerResult = await ImagePicker.launchImageLibraryAsync();
+        if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
+            const imageUri = pickerResult.assets[0].uri;
+            setProfileImage(imageUri);
+        }
     };
 
     return (
         <View style={styles.container}>
             <Header />
-            <Text style={styles.text}>Settings Page</Text>
-            <SettingsHeader />
-            <View style={styles.logoutButtonContainer}>
+            <SettingsHeader profileImage={profileImage} />
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity onPress={handleImageUpload} style={styles.uploadButton}>
+                    <Text style={styles.uploadButtonText}>Upload Profile Image</Text>
+                </TouchableOpacity>
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                    <Text style={styles.logoutButtonText}>Edit Settings</Text>
+                    <Text style={styles.logoutButtonText}>Log Out</Text>
                 </TouchableOpacity>
             </View>
-
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -36,9 +54,16 @@ const Header = () => {
     );
 };
 
-const SettingsHeader = () => {
+const SettingsHeader = ({ profileImage }: { profileImage: string | null }) => {
     return (
         <View style={styles.settingsContainer}>
+            {profileImage ? (
+                <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+                <View style={styles.placeholderImage}>
+                    <Text style={styles.placeholderText}>No Image</Text>
+                </View>
+            )}
             <Text style={styles.settingsText}>Profile</Text>
         </View>
     );
@@ -91,32 +116,64 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     settingsContainer: {
-        top: -350,
+        marginTop: -500,
         width: '100%',
-        paddingVertical: 0,
+        paddingVertical: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'red', // Debugging purposes
+        backgroundColor: '#f5f5f5',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
     },
     settingsText: {
         color: 'black',
         fontSize: 24,
         textAlign: 'center',
     },
+    profileImage: {
+        width: 100,
+        height: 50,
+        borderRadius: 50,
+        marginBottom: 20,
+    },
+    placeholderImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#e0e0e0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    placeholderText: {
+        color: '#757575',
+        fontSize: 16,
+    },
     text: {
         textAlign: 'center',
         fontSize: 18,
         marginVertical: 20,
     },
-    logoutButtonContainer: {
+    buttonContainer: {
         position: 'absolute',
-        bottom: 80, // Adjusted to avoid overlap with navigation tab
+        bottom: 100, 
         width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
     },
+    uploadButton: {
+        backgroundColor: '#4CAF50',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    uploadButtonText: {
+        color: '#fff',
+        textAlign: 'center',
+    },
     logoutButton: {
-        backgroundColor: '#72bcd4',
+        backgroundColor: '#ff6347',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 5,

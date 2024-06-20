@@ -1,28 +1,71 @@
-import { View, Text, StyleSheet, TouchableOpacity, Button } from 'react-native';
-import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
 const Profile = ({ navigation }: RouterProps) => {
-    const handleLogout = () => {
-        FIREBASE_AUTH.signOut();
+    const [profileImage, setProfileImage] = useState<string | null>(null);
+    const [gridImages, setGridImages] = useState<string[]>(Array(9).fill(null));
+
+    useEffect(() => {
+        const loadImages = async () => {
+            const savedProfileImage = await AsyncStorage.getItem('profileImage');
+            const savedGridImages = await AsyncStorage.getItem('gridImages');
+
+            if (savedProfileImage) {
+                setProfileImage(savedProfileImage);
+            }
+            if (savedGridImages) {
+                setGridImages(JSON.parse(savedGridImages));
+            }
+        };
+
+        loadImages();
+    }, []);
+
+    const handleImageUpload = async (index: number) => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (permissionResult.granted === false) {
+            alert("Permission to access camera roll is required!");
+            return;
+        }
+
+        const pickerResult = await ImagePicker.launchImageLibraryAsync();
+        if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
+            const imageUri = pickerResult.assets[0].uri;
+
+            if (index === -1) {
+                // Update profile image
+                setProfileImage(imageUri);
+                await AsyncStorage.setItem('profileImage', imageUri);
+            } else {
+                // Update grid image
+                setGridImages(prevGridImages => {
+                    const newGridImages = [...prevGridImages];
+                    newGridImages[index] = imageUri;
+                    AsyncStorage.setItem('gridImages', JSON.stringify(newGridImages));
+                    return newGridImages;
+                });
+            }
+        }
     };
 
     return (
         <View style={styles.container}>
             <Header />
-            <Text style={styles.text}>Profile Page</Text>
-            <ProfileHeader />
-            <View style={styles.logoutButtonContainer}>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                    <Text style={styles.logoutButtonText}>Edit Profile</Text>
+            <ProfileHeader profileImage={profileImage} />
+            <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity onPress={() => handleImageUpload(-1)} style={styles.uploadButton}>
+                    <Text style={styles.uploadButtonText}>Upload Profile Image</Text>
                 </TouchableOpacity>
             </View>
-
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -36,10 +79,35 @@ const Header = () => {
     );
 };
 
-const ProfileHeader = () => {
+const ProfileHeader = ({ profileImage }: { profileImage: string | null }) => {
     return (
         <View style={styles.profileContainer}>
+            {profileImage ? (
+                <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+                <View style={styles.placeholderImage}>
+                    <Text style={styles.placeholderText}>No Image</Text>
+                </View>
+            )}
             <Text style={styles.profileText}>Profile</Text>
+        </View>
+    );
+};
+
+const ImageGrid = ({ gridImages, handleImageUpload }: { gridImages: string[], handleImageUpload: (index: number) => void }) => {
+    return (
+        <View style={styles.gridContainer}>
+            {gridImages.map((imageUri, index) => (
+                <TouchableOpacity key={index} onPress={() => handleImageUpload(index)} style={styles.gridItem}>
+                    {imageUri ? (
+                        <Image source={{ uri: imageUri }} style={styles.gridImage} />
+                    ) : (
+                        <View style={styles.gridPlaceholder}>
+                            <Text style={styles.gridPlaceholderText}>+</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+            ))}
         </View>
     );
 };
@@ -91,32 +159,65 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     profileContainer: {
-        top: -350,
+        marginTop: -110,
         width: '100%',
-        paddingVertical: 0,
+        paddingVertical: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'red', // Debugging purposes
+        backgroundColor: '#f5f5f5',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
     },
     profileText: {
         color: 'black',
         fontSize: 24,
         textAlign: 'center',
     },
+    profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 10,
+        resizeMode: 'cover',
+    },
+    placeholderImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#e0e0e0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    placeholderText: {
+        color: '#757575',
+        fontSize: 16,
+    },
     text: {
         textAlign: 'center',
         fontSize: 18,
         marginVertical: 20,
     },
-    logoutButtonContainer: {
+    buttonContainer: {
         position: 'absolute',
-        bottom: 80, // Adjusted to avoid overlap with navigation tab
+        bottom: 80,
         width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
     },
+    uploadButton: {
+        backgroundColor: '#4CAF50',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    uploadButtonText: {
+        color: '#fff',
+        textAlign: 'center',
+    },
     logoutButton: {
-        backgroundColor: '#72bcd4',
+        backgroundColor: '#ff6347',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 5,
@@ -124,6 +225,36 @@ const styles = StyleSheet.create({
     logoutButtonText: {
         color: '#fff',
         textAlign: 'center',
+    },
+    gridContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        padding: 10,
+    },
+    gridItem: {
+        width: '30%',
+        aspectRatio: 1,
+        margin: '1.5%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+    },
+    gridImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    gridPlaceholder: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#e0e0e0',
+    },
+    gridPlaceholderText: {
+        fontSize: 24,
+        color: '#757575',
     },
     navigationTabContainer: {
         position: 'absolute',
