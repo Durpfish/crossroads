@@ -17,20 +17,11 @@ const Welcome = ({ navigation }: RouterProps) => {
         }
     }, []);
 
-    const handleLogout = () => {
-        FIREBASE_AUTH.signOut();
-    };
-
     return (
         <View style={styles.container}>
             <TouchableOpacity onPress={() => navigation.navigate('Home')}>
                 <Image source={require('../../assets/loadingscreen2.png')} style={styles.image} />
             </TouchableOpacity>
-            <View style={styles.logoutButtonContainer}>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                    <Text style={styles.logoutButtonText}>Logout</Text>
-                </TouchableOpacity>
-            </View>
             <Text style={styles.overlayText}>Hello,{'\n'}{email}</Text>
         </View>
     );

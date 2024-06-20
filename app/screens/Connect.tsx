@@ -1,11 +1,15 @@
-// Connect.tsx
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { FIREBASE_AUTH } from '../../firebaseConfig';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
+}
+
+interface NearbyUser {
+    id: string;
+    name: string;
+    profilePic: string; // Assuming profilePic is the URL or local path to the profile picture
 }
 
 const Connect = ({ navigation }: RouterProps) => {
@@ -14,16 +18,41 @@ const Connect = ({ navigation }: RouterProps) => {
         navigation.navigate('MessageScreen'); // Navigate to ChatScreen
     };
 
+    // Dummy data for nearby users (replace with actual data or API call)
+    const nearbyUsers: NearbyUser[] = [
+        { id: '1', name: 'Alice', profilePic: 'https://st.depositphotos.com/1000686/3738/i/450/depositphotos_37383675-stock-photo-portrait-of-a-young-beautiful.jpg' },
+        { id: '2', name: 'Bob', profilePic: 'https://bpb-us-w2.wpmucdn.com/portfolio.newschool.edu/dist/2/485/files/2014/08/DSC_1004-2-1a1yqd6.jpg' },
+        // Add more users as needed
+    ];
+
+    // Render item for each nearby user
+    const renderNearbyUser = ({ item }: { item: NearbyUser }) => (
+        <TouchableOpacity style={styles.userItem} onPress={handleConnectPress}>
+            <View style={styles.userDetails}>
+                <View style={styles.profilePicContainer}>
+                    <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
+                </View>
+                <Text style={styles.userName}>{item.name}</Text>
+            </View>
+            <TouchableOpacity style={styles.messageButton} onPress={handleConnectPress}>
+                <Text style={styles.messageButtonText}>Message</Text>
+            </TouchableOpacity>
+        </TouchableOpacity>
+    );
+
     return (
         <View style={styles.container}>
             <Header />
-            <Text style={styles.text}>Connect Page</Text>
+            <Text style={styles.title}>Connect Page</Text>
             <ConnectHeader />
-            <View style={styles.messagesButtonContainer}>
-                <TouchableOpacity onPress={handleConnectPress} style={styles.messagesButton}>
-                    <Text style={styles.messagesButtonText}>Messages</Text>
-                </TouchableOpacity>
-            </View>
+            
+            {/* Display nearby users */}
+            <FlatList
+                data={nearbyUsers}
+                renderItem={renderNearbyUser}
+                keyExtractor={(item) => item.id}
+                style={styles.flatList}
+            />
 
             <NavigationTab navigation={navigation} />
         </View>
@@ -78,6 +107,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: 50,
     },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginVertical: 20,
+        paddingTop: 15,
+    },
     headerContainer: {
         position: 'absolute',
         top: 0,
@@ -110,22 +146,51 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginVertical: 20,
     },
-    messagesButtonContainer: {
-        position: 'absolute',
-        bottom: 80, // Adjusted to avoid overlap with navigation tab
+    flatList: {
         width: '100%',
-        justifyContent: 'center',
+        paddingHorizontal: 20,
+    },
+    userItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between', // Aligns items along the row, pushing message button to the right
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 15,
+        marginBottom: 10,
+    },
+    userDetails: {
+        flexDirection: 'row',
         alignItems: 'center',
     },
-    messagesButton: {
+    profilePicContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        overflow: 'hidden',
+        marginRight: 15,
+    },
+    profilePic: {
+        width: '100%',
+        height: '100%',
+    },
+    userName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    messageButton: {
         backgroundColor: '#72bcd4',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
         borderRadius: 5,
     },
-    messagesButtonText: {
+    messageButtonText: {
         color: '#fff',
         textAlign: 'center',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
     navigationTabContainer: {
         position: 'absolute',
@@ -146,6 +211,5 @@ const styles = StyleSheet.create({
         fontSize: 12,
     }
 });
-
 
 export default Connect;
