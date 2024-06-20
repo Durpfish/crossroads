@@ -1,7 +1,7 @@
 // MessageScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, FlatList, Text, StyleSheet } from 'react-native';
-import { FIREBASE_AUTH, DATABASE } from '../../firebaseConfig';
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { NavigationProp } from '@react-navigation/native';
 
@@ -23,7 +23,7 @@ const MessageScreen = ({ navigation }: RouterProps) => {
 
   useEffect(() => {
     const messagesQuery = query(
-      collection(DATABASE, 'messages'),
+      collection(FIREBASE_FIRESTORE, 'messages'),
       orderBy('createdAt', 'asc')
     );
 
@@ -47,7 +47,7 @@ const MessageScreen = ({ navigation }: RouterProps) => {
       try {
         const user = FIREBASE_AUTH.currentUser;
         if (user) {
-          await addDoc(collection(DATABASE, 'messages'), {
+          await addDoc(collection(FIREBASE_FIRESTORE, 'messages'), {
             text: message,
             createdAt: serverTimestamp(),
             userId: user.uid,
