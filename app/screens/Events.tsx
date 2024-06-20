@@ -1,28 +1,128 @@
-import { View, Text, StyleSheet, TouchableOpacity, Button } from 'react-native';
-import React from 'react';
-import { FIREBASE_AUTH } from '../../firebaseConfig';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, Button, ScrollView } from 'react-native';
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
+import { collection, addDoc, query, where, getDocs, Timestamp, doc, updateDoc } from 'firebase/firestore';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
 const Events = ({ navigation }: RouterProps) => {
-    const handleLogout = () => {
-        FIREBASE_AUTH.signOut();
+    const [events, setEvents] = useState<any[]>([]);
+    const [title, setTitle] = useState('');
+    const [maxParticipants, setMaxParticipants] = useState('');
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetchEvents();
+    }, []);
+
+    const handleListEvent = async () => {
+        if (title.trim() === '' || maxParticipants.trim() === '') {
+            setErrorMsg('Event title and Max participants are required');
+            return;
+        }
+
+        try {
+            const maxParticipantsNumber = parseInt(maxParticipants, 10);
+            if (isNaN(maxParticipantsNumber) || maxParticipantsNumber <= 0) {
+                setErrorMsg('Max participants should be a valid number greater than 0');
+                return;
+            }
+
+            await addDoc(collection(FIREBASE_FIRESTORE, 'events'), {
+                title: title,
+                maxParticipants: maxParticipantsNumber,
+                currentParticipants: [],
+                timestamp: Timestamp.now(),
+                endTime: Timestamp.now().seconds + 12 * 60 * 60, // 12 hours from now in seconds
+            });
+            setTitle('');
+            setMaxParticipants('');
+            fetchEvents(); // Refresh events list
+        } catch (error) {
+            console.error("Error listing event:", error);
+        }
+    };
+
+    const fetchEvents = async () => {
+        try {
+            const now = Timestamp.now();
+            const eventsQuery = query(collection(FIREBASE_FIRESTORE, 'events'), where('endTime', '>=', now.seconds));
+            const querySnapshot = await getDocs(eventsQuery);
+            const eventsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setEvents(eventsData);
+        } catch (error) {
+            console.error("Error fetching events:", error);
+        }
+    };
+
+    const handleJoinEvent = async (eventId: string, currentParticipants: string[]) => {
+        const user = FIREBASE_AUTH.currentUser;
+        if (user) {
+            const userId = user.uid;
+            if (!currentParticipants.includes(userId)) {
+                if (currentParticipants.length < events.find(event => event.id === eventId)?.maxParticipants) {
+                    try {
+                        await updateDoc(doc(FIREBASE_FIRESTORE, 'events', eventId), {
+                            currentParticipants: [...currentParticipants, userId],
+                        });
+                        fetchEvents(); // Refresh events list after joining
+                    } catch (error) {
+                        console.error("Error joining event:", error);
+                    }
+                } else {
+                    alert('Maximum number of participants reached for this event.');
+                }
+            } else {
+                alert('You have already joined this event.');
+            }
+        }
+    };
+
+    const calculateRemainingTime = (endTime: number) => {
+        const currentTime = Timestamp.now().seconds;
+        const remainingTime = endTime - currentTime;
+        const hours = Math.floor(remainingTime / 3600);
+        const minutes = Math.floor((remainingTime % 3600) / 60);
+        return `${hours}h ${minutes}m remaining`;
     };
 
     return (
         <View style={styles.container}>
             <Header />
-            <Text style={styles.text}>Events Page</Text>
-            <EventsHeader />
-            <View style={styles.logoutButtonContainer}>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                    <Text style={styles.logoutButtonText}>List Event</Text>
-                </TouchableOpacity>
+            <Text style={styles.title}>Events Page</Text>
+            <View style={styles.formContainer}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Event Title"
+                    value={title}
+                    onChangeText={setTitle}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Max Participants"
+                    value={maxParticipants}
+                    onChangeText={setMaxParticipants}
+                    keyboardType="numeric"
+                />
+                {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
+                <Button title="List Event" onPress={handleListEvent} />
             </View>
-
+            <ScrollView style={styles.eventListContainer}>
+                {events.map((item) => (
+                    <TouchableOpacity key={item.id} onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={styles.eventContainer}>
+                        <Text style={styles.eventTitle}>{item.title}</Text>
+                        <Text style={styles.eventDetails}>
+                            {calculateRemainingTime(item.endTime)} | Participants: {item.currentParticipants.length}/{item.maxParticipants}
+                        </Text>
+                        <TouchableOpacity onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={styles.joinButton}>
+                            <Text style={styles.joinButtonText}>Join</Text>
+                        </TouchableOpacity>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -32,14 +132,6 @@ const Header = () => {
     return (
         <View style={styles.headerContainer}>
             <Text style={styles.headerText}>CrossRoads</Text>
-        </View>
-    );
-};
-
-const EventsHeader = () => {
-    return (
-        <View style={styles.eventsContainer}>
-            <Text style={styles.eventsText}>Events</Text>
         </View>
     );
 };
@@ -74,11 +166,8 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingTop: 50,
     },
     headerContainer: {
-        position: 'absolute',
-        top: 0,
         width: '100%',
         backgroundColor: 'blue',
         paddingVertical: 20,
@@ -88,49 +177,72 @@ const styles = StyleSheet.create({
     headerText: {
         color: 'white',
         fontSize: 24,
-        textAlign: 'center',
     },
-    eventsContainer: {
-        top: -350,
-        width: '100%',
-        paddingVertical: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'red', // Debugging purposes
-    },
-    eventsText: {
-        color: 'black',
+    title: {
         fontSize: 24,
+        fontWeight: 'bold',
         textAlign: 'center',
-    },
-    text: {
-        textAlign: 'center',
-        fontSize: 18,
         marginVertical: 20,
     },
-    logoutButtonContainer: {
-        position: 'absolute',
-        bottom: 80, // Adjusted to avoid overlap with navigation tab
+    formContainer: {
         width: '100%',
-        justifyContent: 'center',
+        marginBottom: 20,
+    },
+    input: {
+        width: '100%',
+        height: 40,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        marginBottom: 10,
+    },
+    errorText: {
+        color: 'red',
+        marginBottom: 10,
+    },
+    eventListContainer: {
+        flex: 1,
+        width: '100%',
+    },
+    eventContainer: {
+        width: '100%',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 5,
+        marginBottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
     },
-    logoutButton: {
-        backgroundColor: '#72bcd4',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+    eventTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    eventDetails: {
+        fontSize: 14,
+        color: 'gray',
+        marginTop: 5,
+    },
+    joinButton: {
+        backgroundColor: '#4CAF50',
+        paddingVertical: 5,
+        paddingHorizontal: 10,
         borderRadius: 5,
     },
-    logoutButtonText: {
+    joinButtonText: {
         color: '#fff',
+        fontSize: 14,
         textAlign: 'center',
     },
     navigationTabContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
         position: 'absolute',
         bottom: 0,
         width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-around',
         backgroundColor: '#ddd',
         paddingVertical: 10,
     },
@@ -142,8 +254,7 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 12,
-    }
+    },
 });
-
 
 export default Events;
