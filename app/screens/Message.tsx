@@ -1,12 +1,12 @@
-// MessageScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, FlatList, Text, StyleSheet } from 'react-native';
+import { View, TextInput, Button, FlatList, Text, StyleSheet, Alert } from 'react-native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { NavigationProp } from '@react-navigation/native';
+import { collection, addDoc, query, orderBy, onSnapshot, where, serverTimestamp } from 'firebase/firestore';
+import { NavigationProp, RouteProp } from '@react-navigation/native';
 
 interface RouterProps {
   navigation: NavigationProp<any, any>;
+  route: RouteProp<{ params: { recipientId: string; recipientEmail: string } }, 'params'>;
 }
 
 interface Message {
@@ -15,51 +15,66 @@ interface Message {
   createdAt: { seconds: number, nanoseconds: number };
   userId: string;
   userEmail: string;
+  recipientId: string;
+  recipientEmail: string;
 }
 
-const MessageScreen = ({ navigation }: RouterProps) => {
+const MessageScreen = ({ navigation, route }: RouterProps) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const user = FIREBASE_AUTH.currentUser;
+
+  const recipientId = route?.params?.recipientId;
+  const recipientEmail = route?.params?.recipientEmail;
 
   useEffect(() => {
-    const messagesQuery = query(
-      collection(FIREBASE_FIRESTORE, 'messages'),
-      orderBy('createdAt', 'asc')
-    );
+    if (!recipientId || !recipientEmail) {
+      Alert.alert("Error", "Recipient information is missing.");
+      navigation.goBack();
+      return;
+    }
 
-    const unsubscribe = onSnapshot(messagesQuery, querySnapshot => {
-      const messages = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Message));
-      setMessages(messages);
-    });
+    if (user) {
+      const messagesQuery = query(
+        collection(FIREBASE_FIRESTORE, 'messages'),
+        where('userId', 'in', [user.uid, recipientId]),
+        where('recipientId', 'in', [user.uid, recipientId]),
+        orderBy('createdAt', 'asc')
+      );
 
-    navigation.setOptions({
-      headerTitle: 'Messages',
-    });
+      const unsubscribe = onSnapshot(messagesQuery, querySnapshot => {
+        const messages = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Message));
+        setMessages(messages);
+      });
 
-    return unsubscribe;
-  }, [navigation]);
+      navigation.setOptions({
+        headerTitle: `Chat with ${recipientEmail}`,
+      });
+
+      return unsubscribe;
+    }
+  }, [navigation, user, recipientId, recipientEmail]);
 
   const sendMessage = async () => {
-    if (message.trim()) {
+    if (message.trim() && user) {
       try {
-        const user = FIREBASE_AUTH.currentUser;
-        if (user) {
-          await addDoc(collection(FIREBASE_FIRESTORE, 'messages'), {
-            text: message,
-            createdAt: serverTimestamp(),
-            userId: user.uid,
-            userEmail: user.email
-          });
-          setMessage('');
-        } else {
-          console.error('No authenticated user');
-        }
+        await addDoc(collection(FIREBASE_FIRESTORE, 'messages'), {
+          text: message,
+          createdAt: serverTimestamp(),
+          userId: user.uid,
+          userEmail: user.email,
+          recipientId: recipientId,
+          recipientEmail: recipientEmail,
+        });
+        setMessage('');
       } catch (error) {
         console.error('Error sending message: ', error);
       }
+    } else {
+      console.error('No authenticated user or message is empty');
     }
   };
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button, FlatList, ActivityIndicator } from 'react-native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
-import { collection, addDoc, query, where, getDocs, Timestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, Timestamp, doc, updateDoc, orderBy, limit, startAfter } from 'firebase/firestore';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
@@ -13,6 +13,9 @@ const Events = ({ navigation }: RouterProps) => {
     const [title, setTitle] = useState('');
     const [maxParticipants, setMaxParticipants] = useState('');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [lastVisible, setLastVisible] = useState<any>(null);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         fetchEvents();
@@ -46,17 +49,40 @@ const Events = ({ navigation }: RouterProps) => {
         }
     };
 
-    const fetchEvents = async () => {
+    const fetchEvents = async (refresh = false) => {
         try {
+            setLoading(true); // Set loading to true before starting fetch
+    
             const now = Timestamp.now();
-            const eventsQuery = query(collection(FIREBASE_FIRESTORE, 'events'), where('endTime', '>=', now.seconds));
+            let eventsQuery = query(
+                collection(FIREBASE_FIRESTORE, 'events'),
+                where('endTime', '>=', now.seconds),
+                orderBy('endTime'),
+                limit(10)
+            );
+    
+            if (!refresh && lastVisible) {
+                eventsQuery = query(eventsQuery, startAfter(lastVisible));
+            }
+    
             const querySnapshot = await getDocs(eventsQuery);
             const eventsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setEvents(eventsData);
+    
+            if (refresh) {
+                setEvents(eventsData);
+            } else {
+                setEvents(prevEvents => [...prevEvents, ...eventsData]);
+            }
+    
+            setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
         } catch (error) {
             console.error("Error fetching events:", error);
+        } finally {
+            setLoading(false); // Set loading to false after fetch completes
+            setRefreshing(false); // Ensure refreshing state is also updated if refreshing
         }
     };
+    
 
     const handleJoinEvent = async (eventId: string, currentParticipants: string[]) => {
         const user = FIREBASE_AUTH.currentUser;
@@ -69,7 +95,7 @@ const Events = ({ navigation }: RouterProps) => {
                             currentParticipants: [...currentParticipants, userId],
                         });
                         alert('Successfully joined the event!');
-                        fetchEvents(); 
+                        fetchEvents(true); 
                     } catch (error) {
                         console.error("Error joining event:", error);
                     }
@@ -83,7 +109,7 @@ const Events = ({ navigation }: RouterProps) => {
                         currentParticipants: updatedParticipants,
                     });
                     alert('Successfully left the event.');
-                    fetchEvents(); 
+                    fetchEvents(true); 
                 } catch (error) {
                     console.error("Error leaving event:", error);
                 }
@@ -102,6 +128,29 @@ const Events = ({ navigation }: RouterProps) => {
     const isUserJoined = (currentParticipants: string[]) => {
         const user = FIREBASE_AUTH.currentUser;
         return user && currentParticipants.includes(user.uid);
+    };
+
+    const renderEventItem = ({ item }: { item: any }) => (
+        <View style={styles.eventContainer}>
+            <Text style={styles.eventTitle}>{item.title}</Text>
+            <Text style={styles.eventDetails}>
+                {calculateRemainingTime(item.endTime)} | Participants: {item.currentParticipants.length}/{item.maxParticipants}
+            </Text>
+            <TouchableOpacity onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={[styles.joinButton, { backgroundColor: isUserJoined(item.currentParticipants) ? 'red' : '#4CAF50' }]}>
+                <Text style={styles.joinButtonText}>{isUserJoined(item.currentParticipants) ? 'Leave' : 'Join'}</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
+    const handleRefresh = () => {
+        setRefreshing(true);
+        fetchEvents(true).then(() => setRefreshing(false));
+    };
+
+    const handleLoadMore = () => {
+        if (!loading) {
+            fetchEvents();
+        }
     };
 
     return (
@@ -125,19 +174,17 @@ const Events = ({ navigation }: RouterProps) => {
                 {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
                 <Button title="List Event" onPress={handleListEvent} />
             </View>
-            <ScrollView style={styles.eventListContainer}>
-                {events.map((item) => (
-                    <View key={item.id} style={styles.eventContainer}>
-                        <Text style={styles.eventTitle}>{item.title}</Text>
-                        <Text style={styles.eventDetails}>
-                            {calculateRemainingTime(item.endTime)} | Participants: {item.currentParticipants.length}/{item.maxParticipants}
-                        </Text>
-                        <TouchableOpacity onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={[styles.joinButton, { backgroundColor: isUserJoined(item.currentParticipants) ? 'red' : '#4CAF50' }]}>
-                            <Text style={styles.joinButtonText}>{isUserJoined(item.currentParticipants) ? 'Leave' : 'Join'}</Text>
-                        </TouchableOpacity>
-                    </View>
-                ))}
-            </ScrollView>
+            <FlatList
+                data={events}
+                renderItem={renderEventItem}
+                keyExtractor={(item) => item.id}
+                onRefresh={handleRefresh}
+                refreshing={refreshing}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={loading ? <ActivityIndicator size="large" color="#0000ff" /> : null}
+            />
+
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -202,6 +249,7 @@ const styles = StyleSheet.create({
     formContainer: {
         width: '100%',
         marginBottom: 20,
+        paddingHorizontal: 20,
     },
     input: {
         width: '100%',
@@ -215,10 +263,6 @@ const styles = StyleSheet.create({
     errorText: {
         color: 'red',
         marginBottom: 10,
-    },
-    eventListContainer: {
-        flex: 1,
-        width: '100%',
     },
     eventContainer: {
         width: '100%',

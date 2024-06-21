@@ -14,8 +14,11 @@ interface NearbyUser {
 
 const Connect = ({ navigation }: RouterProps) => {
 
-    const handleConnectPress = () => {
-        navigation.navigate('MessageScreen'); // Navigate to ChatScreen
+    const handleConnectPress = (user: NearbyUser) => {
+        navigation.navigate('MessageScreen', {
+            recipientId: user.id,
+            recipientEmail: user.name // Assuming the name can be used as an email for testing purposes
+        });
     };
 
     // Dummy data for nearby users (replace with actual data or API call)
@@ -27,14 +30,14 @@ const Connect = ({ navigation }: RouterProps) => {
 
     // Render item for each nearby user
     const renderNearbyUser = ({ item }: { item: NearbyUser }) => (
-        <TouchableOpacity style={styles.userItem} onPress={handleConnectPress}>
+        <TouchableOpacity style={styles.userItem} onPress={() => handleConnectPress(item)}>
             <View style={styles.userDetails}>
                 <View style={styles.profilePicContainer}>
                     <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
                 </View>
                 <Text style={styles.userName}>{item.name}</Text>
             </View>
-            <TouchableOpacity style={styles.messageButton} onPress={handleConnectPress}>
+            <TouchableOpacity style={styles.messageButton} onPress={() => handleConnectPress(item)}>
                 <Text style={styles.messageButtonText}>Message</Text>
             </TouchableOpacity>
         </TouchableOpacity>

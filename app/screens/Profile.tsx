@@ -12,22 +12,25 @@ interface RouterProps {
 const Profile = ({ navigation }: RouterProps) => {
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const [gridImages, setGridImages] = useState<string[]>(Array(9).fill(null));
+    const user = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
         const loadImages = async () => {
-            const savedProfileImage = await AsyncStorage.getItem('profileImage');
-            const savedGridImages = await AsyncStorage.getItem('gridImages');
+            if (user) {
+                const savedProfileImage = await AsyncStorage.getItem(`${user.uid}_profileImage`);
+                const savedGridImages = await AsyncStorage.getItem(`${user.uid}_gridImages`);
 
-            if (savedProfileImage) {
-                setProfileImage(savedProfileImage);
-            }
-            if (savedGridImages) {
-                setGridImages(JSON.parse(savedGridImages));
+                if (savedProfileImage) {
+                    setProfileImage(savedProfileImage);
+                }
+                if (savedGridImages) {
+                    setGridImages(JSON.parse(savedGridImages));
+                }
             }
         };
 
         loadImages();
-    }, []);
+    }, [user]);
 
     const handleImageUpload = async (index: number) => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -40,18 +43,18 @@ const Profile = ({ navigation }: RouterProps) => {
         if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
             const imageUri = pickerResult.assets[0].uri;
 
-            if (index === -1) {
-                // Update profile image
-                setProfileImage(imageUri);
-                await AsyncStorage.setItem('profileImage', imageUri);
-            } else {
-                // Update grid image
-                setGridImages(prevGridImages => {
-                    const newGridImages = [...prevGridImages];
-                    newGridImages[index] = imageUri;
-                    AsyncStorage.setItem('gridImages', JSON.stringify(newGridImages));
-                    return newGridImages;
-                });
+            if (user) {
+                if (index === -1) {
+                    setProfileImage(imageUri);
+                    await AsyncStorage.setItem(`${user.uid}_profileImage`, imageUri);
+                } else {
+                    setGridImages(prevGridImages => {
+                        const newGridImages = [...prevGridImages];
+                        newGridImages[index] = imageUri;
+                        AsyncStorage.setItem(`${user.uid}_gridImages`, JSON.stringify(newGridImages));
+                        return newGridImages;
+                    });
+                }
             }
         }
     };
@@ -172,6 +175,7 @@ const styles = StyleSheet.create({
         color: 'black',
         fontSize: 24,
         textAlign: 'center',
+        fontWeight: 'bold',
     },
     profileImage: {
         width: 100,
@@ -213,16 +217,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     uploadButtonText: {
-        color: '#fff',
-        textAlign: 'center',
-    },
-    logoutButton: {
-        backgroundColor: '#ff6347',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 5,
-    },
-    logoutButtonText: {
         color: '#fff',
         textAlign: 'center',
     },
@@ -275,6 +269,5 @@ const styles = StyleSheet.create({
         fontSize: 12,
     }
 });
-
 
 export default Profile;
