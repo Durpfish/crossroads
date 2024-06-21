@@ -69,9 +69,13 @@ const Events = ({ navigation }: RouterProps) => {
             const eventsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
             if (refresh) {
-                setEvents(eventsData);
+                setEvents(eventsData); // Replace events array on refresh
             } else {
-                setEvents(prevEvents => [...prevEvents, ...eventsData]);
+                setEvents(prevEvents => {
+                    // Filter out any duplicate events by checking IDs
+                    const newEvents = eventsData.filter(newEvent => !prevEvents.find(oldEvent => oldEvent.id === newEvent.id));
+                    return [...prevEvents, ...newEvents];
+                });
             }
     
             setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
@@ -82,6 +86,7 @@ const Events = ({ navigation }: RouterProps) => {
             setRefreshing(false); // Ensure refreshing state is also updated if refreshing
         }
     };
+    
     
 
     const handleJoinEvent = async (eventId: string, currentParticipants: string[]) => {
