@@ -61,9 +61,8 @@ const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
         { name: "Events", icon: "🎫" },
-        { name: "Connect", icon: "🤝🏽" },
+        { name: "Matches", icon: "🤝🏽" },
         { name: "Profile", icon: "👤" },
-        { name: "Settings", icon: "⚙️" },
     ];
 
     return (

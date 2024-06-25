@@ -1,79 +1,56 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 
+//TODO Replace the image source paths with the actual paths or URLs of your images.
+//TODO The handleSearchUsers function can be expanded to perform actual user search logic.
+
+interface ConnectProps {
+    navigation: NavigationProp<any, any>;
+}
 interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
-interface NearbyUser {
-    id: string;
-    name: string;
-    profilePic: string; // Assuming profilePic is the URL or local path to the profile picture
-}
+const Connect = ({ navigation }: ConnectProps) => {
+    const [usersAvailable, setUsersAvailable] = useState(true); // Default is no users available (can set to true/false to test)
 
-const Connect = ({ navigation }: RouterProps) => {
-
-    const handleConnectPress = (user: NearbyUser) => {
-        navigation.navigate('MessageScreen', {
-            recipientId: user.id,
-            recipientEmail: user.name // Assuming the name can be used as an email for testing purposes
-        });
+    const handleSearchUsers = () => {
+        // Placeholder function to simulate searching for users
+        // In a real app, you would perform a fetch request here
+        setUsersAvailable(true); // Change this to `true` when users are found
     };
 
-    // Dummy data for nearby users (replace with actual data or API call)
-    const nearbyUsers: NearbyUser[] = [
-        { id: '1', name: 'Alice', profilePic: 'https://st.depositphotos.com/1000686/3738/i/450/depositphotos_37383675-stock-photo-portrait-of-a-young-beautiful.jpg' },
-        { id: '2', name: 'Bob', profilePic: 'https://bpb-us-w2.wpmucdn.com/portfolio.newschool.edu/dist/2/485/files/2014/08/DSC_1004-2-1a1yqd6.jpg' },
-        // Add more users as needed
-    ];
-
-    // Render item for each nearby user
-    const renderNearbyUser = ({ item }: { item: NearbyUser }) => (
-        <TouchableOpacity style={styles.userItem} onPress={() => handleConnectPress(item)}>
-            <View style={styles.userDetails}>
-                <View style={styles.profilePicContainer}>
-                    <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
-                </View>
-                <Text style={styles.userName}>{item.name}</Text>
-            </View>
-            <TouchableOpacity style={styles.messageButton} onPress={() => handleConnectPress(item)}>
-                <Text style={styles.messageButtonText}>Message</Text>
-            </TouchableOpacity>
-        </TouchableOpacity>
-    );
+    const navigateToEvents = () => {
+        navigation.navigate('Events');
+    };
 
     return (
         <View style={styles.container}>
-            <Header />
-            <Text style={styles.title}>Connect Page</Text>
-            <ConnectHeader />
-            
-            {/* Display nearby users */}
-            <FlatList
-                data={nearbyUsers}
-                renderItem={renderNearbyUser}
-                keyExtractor={(item) => item.id}
-                style={styles.flatList}
-            />
-
+            {usersAvailable ? (
+                <View style={styles.userAvailableContainer}>
+                    <Text style={styles.title}>Love is right around the corner!</Text>
+                    <Text style={styles.subtitle}>Match with [Username]?</Text>
+                    <Text style={styles.profileDetails}>[Profile details]</Text>
+                    <View style={styles.actionButtons}>
+                        <TouchableOpacity style={styles.rejectButton}>
+                            <Text style={styles.rejectButtonText}>✗</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.acceptButton}>
+                            <Text style={styles.acceptButtonText}>✓</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            ) : (
+                <View style={styles.noUserContainer}>
+                    <Text style={styles.title}>It’s real quiet around this area!</Text>
+                    <Text style={styles.subtitle}>Why not sign up for some activities?</Text>
+                    <TouchableOpacity style={styles.navigateButton} onPress={navigateToEvents}>
+                        <Text style={styles.navigateButtonText}>Go to Events</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
             <NavigationTab navigation={navigation} />
-        </View>
-    );
-};
-
-const Header = () => {
-    return (
-        <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>CrossRoads</Text>
-        </View>
-    );
-};
-
-const ConnectHeader = () => {
-    return (
-        <View style={styles.connectContainer}>
-            <Text style={styles.connectText}>Connect</Text>
         </View>
     );
 };
@@ -83,8 +60,8 @@ const NavigationTab = ({ navigation }: RouterProps) => {
         { name: "Home", icon: "🏠" },
         { name: "Events", icon: "🎫" },
         { name: "Connect", icon: "🤝🏽" },
+        { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
-        { name: "Settings", icon: "⚙️" },
     ];
 
     return (
@@ -108,91 +85,69 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingTop: 50,
+        backgroundColor: '#fff',
+    },
+    userAvailableContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    noUserContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginVertical: 20,
-        paddingTop: 15,
+        marginBottom: 20,
     },
-    headerContainer: {
-        position: 'absolute',
-        top: 0,
-        width: '100%',
-        backgroundColor: 'blue',
-        paddingVertical: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerText: {
-        color: 'white',
-        fontSize: 24,
-        textAlign: 'center',
-    },
-    connectContainer: {
-        top: -350,
-        width: '100%',
-        paddingVertical: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'red', // Debugging purposes
-    },
-    connectText: {
-        color: 'black',
-        fontSize: 24,
-        textAlign: 'center',
-    },
-    text: {
-        textAlign: 'center',
+    subtitle: {
         fontSize: 18,
-        marginVertical: 20,
+        textAlign: 'center',
+        marginBottom: 20,
     },
-    flatList: {
-        width: '100%',
-        paddingHorizontal: 20,
+    userImage: {
+        width: 200,
+        height: 200,
+        marginBottom: 20,
     },
-    userItem: {
+    profileDetails: {
+        fontSize: 16,
+        color: '#757575',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    actionButtons: {
         flexDirection: 'row',
-        justifyContent: 'space-between', // Aligns items along the row, pushing message button to the right
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 15,
-        marginBottom: 10,
+        justifyContent: 'space-between',
+        width: '60%',
     },
-    userDetails: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    rejectButton: {
+        backgroundColor: '#f44336',
+        padding: 10,
+        borderRadius: 50,
     },
-    profilePicContainer: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        overflow: 'hidden',
-        marginRight: 15,
-    },
-    profilePic: {
-        width: '100%',
-        height: '100%',
-    },
-    userName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    messageButton: {
-        backgroundColor: '#72bcd4',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 5,
-    },
-    messageButtonText: {
+    rejectButtonText: {
         color: '#fff',
-        textAlign: 'center',
-        fontWeight: 'bold',
+        fontSize: 24,
+    },
+    acceptButton: {
+        backgroundColor: '#4CAF50',
+        padding: 10,
+        borderRadius: 50,
+    },
+    acceptButtonText: {
+        color: '#fff',
+        fontSize: 24,
+    },
+    navigateButton: {
+        backgroundColor: '#007BFF',
+        padding: 15,
+        borderRadius: 5,
+        marginTop: 20,
+    },
+    navigateButtonText: {
+        color: '#fff',
         fontSize: 16,
     },
     navigationTabContainer: {
@@ -212,7 +167,7 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 12,
-    }
+    },
 });
 
 export default Connect;

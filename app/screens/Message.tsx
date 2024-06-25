@@ -19,7 +19,7 @@ interface Message {
   recipientEmail: string;
 }
 
-const MessageScreen = ({ navigation, route }: RouterProps) => {
+const Message = ({ navigation, route }: RouterProps) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const user = FIREBASE_AUTH.currentUser;
@@ -124,4 +124,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MessageScreen;
+export default Message;

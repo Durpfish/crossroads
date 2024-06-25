@@ -9,6 +9,10 @@ interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
+interface HeaderProps {
+    navigation: NavigationProp<any, any>;
+}
+
 const Profile = ({ navigation }: RouterProps) => {
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const [gridImages, setGridImages] = useState<string[]>(Array(9).fill(null));
@@ -59,9 +63,10 @@ const Profile = ({ navigation }: RouterProps) => {
         }
     };
 
+
     return (
         <View style={styles.container}>
-            <Header />
+            <Header navigation={navigation} /> 
             <ProfileHeader profileImage={profileImage} />
             <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
             <View style={styles.buttonContainer}>
@@ -74,10 +79,17 @@ const Profile = ({ navigation }: RouterProps) => {
     );
 };
 
-const Header = () => {
+const Header: React.FC<HeaderProps> = ({ navigation }) => {
+    const navigateToSettings = () => {
+        navigation.navigate('Settings');
+    };
+
     return (
         <View style={styles.headerContainer}>
             <Text style={styles.headerText}>CrossRoads</Text>
+            <TouchableOpacity onPress={navigateToSettings} style={styles.settingsIcon}>
+                <Text style={styles.tabIcon}>{"⚙️"}</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -120,8 +132,8 @@ const NavigationTab = ({ navigation }: RouterProps) => {
         { name: "Home", icon: "🏠" },
         { name: "Events", icon: "🎫" },
         { name: "Connect", icon: "🤝🏽" },
+        { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
-        { name: "Settings", icon: "⚙️" },
     ];
 
     return (
@@ -153,14 +165,17 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: 'blue',
         paddingVertical: 20,
-        justifyContent: 'center',
         alignItems: 'center',
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        paddingHorizontal: 10, 
     },
     headerText: {
         color: 'white',
         fontSize: 24,
         textAlign: 'center',
     },
+
     profileContainer: {
         marginTop: -110,
         width: '100%',
@@ -267,7 +282,14 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 12,
-    }
+    },
+    settingsIcon: {
+        position: 'absolute',
+        right: 20,
+        top: 20,
+        padding: 10,
+        zIndex: 1, 
+    },
 });
 
 export default Profile;

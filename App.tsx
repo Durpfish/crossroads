@@ -5,6 +5,7 @@ import Welcome from './app/screens/Welcome';
 import Home from './app/screens/Home';
 import Events from './app/screens/Events';
 import Connect from './app/screens/Connect';
+import Matches from './app/screens/Matches';
 import Profile from './app/screens/Profile';
 import Settings from './app/screens/Settings';
 import Chat from './app/screens/Message';
@@ -39,6 +40,11 @@ function InsideLayout() {
         options={{ headerShown: false, animation: 'none' }}
       />
       <InsideStack.Screen 
+        name="Matches" 
+        component={Matches} 
+        options={{ headerShown: false, animation: 'none' }}
+      />
+      <InsideStack.Screen 
         name="Profile" 
         component={Profile} 
         options={{ headerShown: false, animation: 'none' }}
@@ -49,7 +55,7 @@ function InsideLayout() {
         options={{ headerShown: false, animation: 'none' }}
       />
       <InsideStack.Screen 
-        name="MessageScreen" 
+        name="Message" 
         component={Chat} 
         options={{ headerShown: true, animation: 'none' }}
       />
