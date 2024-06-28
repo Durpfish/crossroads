@@ -1,46 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
-
-//TODO Replace the image source paths with the actual paths or URLs of your images.
-//TODO The handleSearchUsers function can be expanded to perform actual user search logic.
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface ConnectProps {
     navigation: NavigationProp<any, any>;
 }
+
 interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
 const Connect = ({ navigation }: ConnectProps) => {
-    const [usersAvailable, setUsersAvailable] = useState(true); // Default is no users available (can set to true/false to test)
+    const [profiles, setProfiles] = useState<any[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const user = FIREBASE_AUTH.currentUser;
 
-    const handleSearchUsers = () => {
-        // Placeholder function to simulate searching for users
-        // In a real app, you would perform a fetch request here
-        setUsersAvailable(true); // Change this to `true` when users are found
+    useEffect(() => {
+        const fetchProfiles = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(FIREBASE_FIRESTORE, 'profiles'));
+                const profilesData: any[] = [];
+                querySnapshot.forEach((doc) => {
+                    const profileData = doc.data();
+                    if (profileData.userId !== user.uid) { // Ensure this check is correct
+                        profilesData.push({ id: doc.id, ...profileData });
+                    }
+                });
+                setProfiles(profilesData);
+            } catch (error) {
+                console.error('Error fetching profiles: ', error);
+            }
+        };
+
+        fetchProfiles();
+    }, [user]);
+
+    const handleReject = () => {
+        if (currentIndex < profiles.length - 1) {
+            setCurrentIndex(currentIndex + 1);
+        } else {
+            setCurrentIndex(0); // Reset to the first profile if at the end
+        }
+    };
+
+    const handleAccept = () => {
+        if (currentIndex < profiles.length - 1) {
+            setCurrentIndex(currentIndex + 1);
+        } else {
+            setCurrentIndex(0); // Reset to the first profile if at the end
+        }
     };
 
     const navigateToEvents = () => {
         navigation.navigate('Events');
     };
 
+    const renderProfile = (profile) => (
+        <View style={styles.userAvailableContainer}>
+            <Text style={styles.title}>Love is right around the corner!</Text>
+            <Image source={{ uri: profile.profileImage }} style={styles.userImage} />
+            <Text style={styles.subtitle}>Match with {profile.profileName}?</Text>
+            <Text style={styles.profileDetails}>Age: {profile.age}</Text>
+            <View style={styles.actionButtons}>
+                <TouchableOpacity style={styles.rejectButton} onPress={handleReject}>
+                    <Text style={styles.rejectButtonText}>✗</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
+                    <Text style={styles.acceptButtonText}>✓</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+
     return (
         <View style={styles.container}>
-            {usersAvailable ? (
-                <View style={styles.userAvailableContainer}>
-                    <Text style={styles.title}>Love is right around the corner!</Text>
-                    <Text style={styles.subtitle}>Match with [Username]?</Text>
-                    <Text style={styles.profileDetails}>[Profile details]</Text>
-                    <View style={styles.actionButtons}>
-                        <TouchableOpacity style={styles.rejectButton}>
-                            <Text style={styles.rejectButtonText}>✗</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.acceptButton}>
-                            <Text style={styles.acceptButtonText}>✓</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+            {profiles.length > 0 ? (
+                renderProfile(profiles[currentIndex])
             ) : (
                 <View style={styles.noUserContainer}>
                     <Text style={styles.title}>It’s real quiet around this area!</Text>
@@ -90,6 +127,7 @@ const styles = StyleSheet.create({
     userAvailableContainer: {
         justifyContent: 'center',
         alignItems: 'center',
+        padding: 20,
     },
     noUserContainer: {
         justifyContent: 'center',
@@ -107,9 +145,11 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     userImage: {
-        width: 200,
-        height: 200,
+        width: 150,
+        height: 150,
+        borderRadius: 75,
         marginBottom: 20,
+        resizeMode: 'cover',
     },
     profileDetails: {
         fontSize: 16,

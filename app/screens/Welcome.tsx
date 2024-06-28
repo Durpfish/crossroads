@@ -1,20 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Image, Text, StyleSheet, Dimensions } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
-import { FIREBASE_AUTH } from '../../firebaseConfig';
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
 const Welcome = ({ navigation }: RouterProps) => {
-    const [email, setEmail] = useState<string | null>(null);
+    const [userName, setUserName] = useState<string | null>(null);
 
     useEffect(() => {
-        const user = FIREBASE_AUTH.currentUser;
-        if (user) {
-            setEmail(user.email);
-        }
+        const fetchUserProfile = async () => {
+            const user = FIREBASE_AUTH.currentUser;
+            if (user) {
+                const docRef = doc(FIREBASE_FIRESTORE, 'profiles', user.uid);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    setUserName(docSnap.data().profileName || user.email); // Default to email if profileName is not set
+                } else {
+                    setUserName(user.email); // Fallback to email if no profile found
+                }
+            }
+        };
+
+        fetchUserProfile();
     }, []);
 
     return (
@@ -22,7 +34,7 @@ const Welcome = ({ navigation }: RouterProps) => {
             <TouchableOpacity onPress={() => navigation.navigate('Home')}>
                 <Image source={require('../../assets/loadingscreen2.png')} style={styles.image} />
             </TouchableOpacity>
-            <Text style={styles.overlayText}>Hello,{'\n'}{email}</Text>
+            <Text style={styles.overlayText}>Hello,{'\n'}{userName}</Text>
         </View>
     );
 }
