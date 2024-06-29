@@ -1,35 +1,56 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
-interface NearbyUser {
+interface MatchedUser {
     id: string;
     name: string;
-    profilePic: string; // Assuming profilePic is the URL or local path to the profile picture
+    profilePic: string;
 }
 
 const Matches = ({ navigation }: RouterProps) => {
+    const [matchedUsers, setMatchedUsers] = useState<MatchedUser[]>([]);
+    const [loading, setLoading] = useState(true);
+    const user = FIREBASE_AUTH.currentUser;
 
-    const handleConnectPress = (user: NearbyUser) => {
+    useEffect(() => {
+        const q = query(collection(FIREBASE_FIRESTORE, 'matches'), where('userId', '==', user.uid));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const matchesData: MatchedUser[] = [];
+            querySnapshot.forEach((doc) => {
+                const matchData = doc.data();
+                if (matchData.matchedUserName && matchData.matchedUserProfilePic) {
+                    matchesData.push({
+                        id: matchData.matchedUserId,
+                        name: matchData.matchedUserName,
+                        profilePic: matchData.matchedUserProfilePic,
+                    });
+                }
+            });
+            setMatchedUsers(matchesData);
+            setLoading(false);
+        }, (error) => {
+            console.error('Error fetching matches: ', error);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
+    const handleConnectPress = (user: MatchedUser) => {
         navigation.navigate('Message', {
             recipientId: user.id,
-            recipientEmail: user.name // Assuming the name can be used as an email for testing purposes
+            recipientName: user.name
         });
     };
 
-    // Dummy data for nearby users (replace with actual data or API call)
-    const nearbyUsers: NearbyUser[] = [
-        { id: '1', name: 'Alice', profilePic: 'https://st.depositphotos.com/1000686/3738/i/450/depositphotos_37383675-stock-photo-portrait-of-a-young-beautiful.jpg' },
-        { id: '2', name: 'Bob', profilePic: 'https://bpb-us-w2.wpmucdn.com/portfolio.newschool.edu/dist/2/485/files/2014/08/DSC_1004-2-1a1yqd6.jpg' },
-        // Add more users as needed
-    ];
-
-    // Render item for each nearby user
-    const renderNearbyUser = ({ item }: { item: NearbyUser }) => (
+    const renderMatchedUser = ({ item }: { item: MatchedUser }) => (
         <TouchableOpacity style={styles.userItem} onPress={() => handleConnectPress(item)}>
             <View style={styles.userDetails}>
                 <View style={styles.profilePicContainer}>
@@ -48,15 +69,16 @@ const Matches = ({ navigation }: RouterProps) => {
             <Header />
             <Text style={styles.title}>Your Matches</Text>
             <ConnectHeader />
-            
-            {/* Display nearby users */}
-            <FlatList
-                data={nearbyUsers}
-                renderItem={renderNearbyUser}
-                keyExtractor={(item) => item.id}
-                style={styles.flatList}
-            />
-
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+                <FlatList
+                    data={matchedUsers}
+                    renderItem={renderMatchedUser}
+                    keyExtractor={(item) => item.id}
+                    style={styles.flatList}
+                />
+            )}
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -155,7 +177,7 @@ const styles = StyleSheet.create({
     },
     userItem: {
         flexDirection: 'row',
-        justifyContent: 'space-between', // Aligns items along the row, pushing message button to the right
+        justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: '#fff',
         borderWidth: 1,

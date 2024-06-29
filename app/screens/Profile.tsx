@@ -1,11 +1,11 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from '../../firebaseConfig'; // Import Firestore and Storage
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, setDoc } from 'firebase/firestore'; // Import Firestore functions
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Import Storage functions
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
@@ -17,7 +17,7 @@ interface HeaderProps {
 
 const Profile = ({ navigation }: RouterProps) => {
     const [profileImage, setProfileImage] = useState<string | null>(null);
-    const [gridImages, setGridImages] = useState<string[]>(Array(6).fill(null)); // Changed to 6
+    const [gridImages, setGridImages] = useState<string[]>(Array(6).fill(null));
     const [profileName, setProfileName] = useState<string>('');
     const [age, setAge] = useState<string>('');
     const user = FIREBASE_AUTH.currentUser;
@@ -25,22 +25,15 @@ const Profile = ({ navigation }: RouterProps) => {
     useEffect(() => {
         const loadProfileData = async () => {
             if (user) {
-                const savedProfileImage = await AsyncStorage.getItem(`${user.uid}_profileImage`);
-                const savedGridImages = await AsyncStorage.getItem(`${user.uid}_gridImages`);
-                const savedProfileName = await AsyncStorage.getItem(`${user.uid}_profileName`);
-                const savedAge = await AsyncStorage.getItem(`${user.uid}_age`);
+                const docRef = doc(FIREBASE_FIRESTORE, 'profiles', user.uid);
+                const docSnap = await getDoc(docRef);
 
-                if (savedProfileImage) {
-                    setProfileImage(savedProfileImage);
-                }
-                if (savedGridImages) {
-                    setGridImages(JSON.parse(savedGridImages));
-                }
-                if (savedProfileName) {
-                    setProfileName(savedProfileName);
-                }
-                if (savedAge) {
-                    setAge(savedAge);
+                if (docSnap.exists()) {
+                    const profileData = docSnap.data();
+                    setProfileImage(profileData.profileImage || null);
+                    setGridImages(profileData.gridImages || Array(6).fill(null));
+                    setProfileName(profileData.profileName || '');
+                    setAge(profileData.age || '');
                 }
             }
         };
@@ -72,7 +65,6 @@ const Profile = ({ navigation }: RouterProps) => {
                         return newGridImages;
                     });
                 }
-                // Save profile data to Firestore
                 saveProfileToFirestore(user.uid, uploadUrl, gridImages, profileName, age);
             }
         }
@@ -95,7 +87,6 @@ const Profile = ({ navigation }: RouterProps) => {
         const fileRef = ref(FIREBASE_STORAGE, `images/${user.uid}/${Date.now()}`);
         await uploadBytes(fileRef, blob);
 
-        // We're done with the blob, close and release it
         blob.close();
 
         return await getDownloadURL(fileRef);
@@ -197,7 +188,7 @@ const ProfileHeader = ({ profileImage }: { profileImage: string | null }) => {
 const ImageGrid = ({ gridImages, handleImageUpload }: { gridImages: string[], handleImageUpload: (index: number) => void }) => {
     return (
         <View style={styles.gridContainer}>
-            {gridImages.slice(0, 6).map((imageUri, index) => ( // Ensure only 6 images are shown
+            {gridImages.slice(0, 6).map((imageUri, index) => (
                 <TouchableOpacity key={index} onPress={() => handleImageUpload(index)} style={styles.gridItem}>
                     {imageUri ? (
                         <Image source={{ uri: imageUri }} style={styles.gridImage} />
