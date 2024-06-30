@@ -1,14 +1,15 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './app/screens/Login';
-import Welcome from './app/screens/Welcome';
+// import Welcome from './app/screens/Welcome';
 import Home from './app/screens/Home';
 import Events from './app/screens/Events';
 import Connect from './app/screens/Connect';
 import Matches from './app/screens/Matches';
 import Profile from './app/screens/Profile';
 import Settings from './app/screens/Settings';
-import Chat from './app/screens/Message';
+import Message from './app/screens/Message';
+import ProfileSummary from './app/screens/ProfileSummary';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { FIREBASE_AUTH } from './firebaseConfig';
@@ -51,7 +52,12 @@ function InsideLayout() {
       />
       <InsideStack.Screen 
         name="Message" 
-        component={Chat} 
+        component={Message} 
+        options={{ headerShown: true, animation: 'none' }}
+      />
+      <InsideStack.Screen 
+        name="ProfileSummary" 
+        component={ProfileSummary} 
         options={{ headerShown: true, animation: 'none' }}
       />
     </InsideStack.Navigator>

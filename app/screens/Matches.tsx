@@ -12,6 +12,8 @@ interface MatchedUser {
     id: string;
     name: string;
     profilePic: string;
+    age: number;
+    additionalPics: string[];
 }
 
 const Matches = ({ navigation }: RouterProps) => {
@@ -30,6 +32,8 @@ const Matches = ({ navigation }: RouterProps) => {
                         id: matchData.matchedUserId,
                         name: matchData.matchedUserName,
                         profilePic: matchData.matchedUserProfilePic,
+                        age: matchData.matchedUserAge,
+                        additionalPics: matchData.additionalPics || [],
                     });
                 }
             });
@@ -43,7 +47,13 @@ const Matches = ({ navigation }: RouterProps) => {
         return () => unsubscribe();
     }, [user]);
 
-    const handleConnectPress = (user: MatchedUser) => {
+    const handleProfilePress = (user: MatchedUser) => {
+        navigation.navigate('ProfileSummary', {
+            userId: user.id,
+        });
+    };
+
+    const handleMessagePress = (user: MatchedUser) => {
         navigation.navigate('Message', {
             recipientId: user.id,
             recipientName: user.name
@@ -51,17 +61,17 @@ const Matches = ({ navigation }: RouterProps) => {
     };
 
     const renderMatchedUser = ({ item }: { item: MatchedUser }) => (
-        <TouchableOpacity style={styles.userItem} onPress={() => handleConnectPress(item)}>
-            <View style={styles.userDetails}>
+        <View style={styles.userItem}>
+            <TouchableOpacity style={styles.userDetails} onPress={() => handleProfilePress(item)}>
                 <View style={styles.profilePicContainer}>
                     <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
                 </View>
                 <Text style={styles.userName}>{item.name}</Text>
-            </View>
-            <TouchableOpacity style={styles.messageButton} onPress={() => handleConnectPress(item)}>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.messageButton} onPress={() => handleMessagePress(item)}>
                 <Text style={styles.messageButtonText}>Message</Text>
             </TouchableOpacity>
-        </TouchableOpacity>
+        </View>
     );
 
     return (
