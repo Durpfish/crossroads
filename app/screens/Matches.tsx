@@ -97,7 +97,6 @@ const Matches = ({ navigation }: RouterProps) => {
 const Header = () => {
     return (
         <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>CrossRoads</Text>
         </View>
     );
 };
@@ -113,7 +112,7 @@ const ConnectHeader = () => {
 const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
-        { name: "Events", icon: "🎫" },
+        { name: "Events", icon: "📅" },
         { name: "Connect", icon: "🤝🏽" },
         { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
@@ -153,8 +152,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         width: '100%',
-        backgroundColor: 'blue',
-        paddingVertical: 20,
+        backgroundColor: '#72bcd4',
+        paddingVertical: 25,
         justifyContent: 'center',
         alignItems: 'center',
     },

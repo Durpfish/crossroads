@@ -21,19 +21,19 @@ const Home = ({ navigation }: RouterProps) => {
 
                 {/* Feature Section: News Feed */}
                 <TouchableOpacity style={styles.featureContainer} onPress={() => navigation.navigate('NewsFeed')}>
-                    <Text style={styles.featureText}>News Feed</Text>
+                    <Text style={styles.featureText}>News Feed 📰</Text>
                     <Text style={styles.featureDescription}>Stay updated with posts from friends and communities</Text>
                 </TouchableOpacity>
 
                 {/* Feature Section: Events */}
                 <TouchableOpacity style={styles.featureContainer} onPress={() => navigation.navigate('Events')}>
-                    <Text style={styles.featureText}>Events</Text>
+                    <Text style={styles.featureText}>Events 📅</Text>
                     <Text style={styles.featureDescription}>Discover and join events happening soon</Text>
                 </TouchableOpacity>
 
                 {/* Feature Section: Connect */}
                 <TouchableOpacity style={styles.featureContainer} onPress={() => navigation.navigate('Connect')}>
-                    <Text style={styles.featureText}>Connect</Text>
+                    <Text style={styles.featureText}>Connect 🌐</Text>
                     <Text style={styles.featureDescription}>Meet new people near you</Text>
                 </TouchableOpacity>
 
@@ -52,7 +52,6 @@ const Home = ({ navigation }: RouterProps) => {
 const Header = () => {
     return (
         <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>CrossRoads</Text>
         </View>
     );
 };
@@ -60,7 +59,7 @@ const Header = () => {
 const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
-        { name: "Events", icon: "🎫" },
+        { name: "Events", icon: "📅" },
         { name: "Connect", icon: "🤝🏽" },
         { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
@@ -92,8 +91,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         width: '100%',
-        backgroundColor: 'blue',
-        paddingVertical: 20,
+        backgroundColor: '#72bcd4',
+        paddingVertical: 25,
         justifyContent: 'center',
         alignItems: 'center',
     },

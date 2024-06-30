@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList } from 'react-native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
 import { collection, addDoc, query, where, getDocs, Timestamp, doc, updateDoc, orderBy, limit, startAfter } from 'firebase/firestore';
@@ -13,7 +13,6 @@ const Events = ({ navigation }: RouterProps) => {
     const [title, setTitle] = useState('');
     const [maxParticipants, setMaxParticipants] = useState('');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
     const [lastVisible, setLastVisible] = useState<any>(null);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -51,7 +50,7 @@ const Events = ({ navigation }: RouterProps) => {
 
     const fetchEvents = async (refresh = false) => {
         try {
-            setLoading(true); // Set loading to true before starting fetch
+            if (refresh) setRefreshing(true); // Set refreshing to true before starting fetch
     
             const now = Timestamp.now();
             let eventsQuery = query(
@@ -82,12 +81,9 @@ const Events = ({ navigation }: RouterProps) => {
         } catch (error) {
             console.error("Error fetching events:", error);
         } finally {
-            setLoading(false); // Set loading to false after fetch completes
-            setRefreshing(false); // Ensure refreshing state is also updated if refreshing
+            setRefreshing(false); // Set refreshing to false after fetch completes
         }
     };
-    
-    
 
     const handleJoinEvent = async (eventId: string, currentParticipants: string[]) => {
         const user = FIREBASE_AUTH.currentUser;
@@ -141,21 +137,18 @@ const Events = ({ navigation }: RouterProps) => {
             <Text style={styles.eventDetails}>
                 {calculateRemainingTime(item.endTime)} | Participants: {item.currentParticipants.length}/{item.maxParticipants}
             </Text>
-            <TouchableOpacity onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={[styles.joinButton, { backgroundColor: isUserJoined(item.currentParticipants) ? 'red' : '#4CAF50' }]}>
+            <TouchableOpacity onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={[styles.joinButton, { backgroundColor: isUserJoined(item.currentParticipants) ? 'red' : '#78b075' }]}>
                 <Text style={styles.joinButtonText}>{isUserJoined(item.currentParticipants) ? 'Leave' : 'Join'}</Text>
             </TouchableOpacity>
         </View>
     );
 
     const handleRefresh = () => {
-        setRefreshing(true);
-        fetchEvents(true).then(() => setRefreshing(false));
+        fetchEvents(true);
     };
 
     const handleLoadMore = () => {
-        if (!loading) {
-            fetchEvents();
-        }
+        fetchEvents();
     };
 
     return (
@@ -177,7 +170,9 @@ const Events = ({ navigation }: RouterProps) => {
                     keyboardType="numeric"
                 />
                 {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
-                <Button title="List Event" onPress={handleListEvent} />
+                <TouchableOpacity onPress={handleListEvent} style={styles.listEventButton}>
+                    <Text style={styles.listEventButtonText}>List Event</Text>
+                </TouchableOpacity>
             </View>
             <FlatList
                 data={events}
@@ -187,9 +182,7 @@ const Events = ({ navigation }: RouterProps) => {
                 refreshing={refreshing}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
-                ListFooterComponent={loading ? <ActivityIndicator size="large" color="#0000ff" /> : null}
             />
-
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -198,7 +191,6 @@ const Events = ({ navigation }: RouterProps) => {
 const Header = () => {
     return (
         <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>CrossRoads</Text>
         </View>
     );
 };
@@ -206,7 +198,7 @@ const Header = () => {
 const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
-        { name: "Events", icon: "🎫" },
+        { name: "Events", icon: "📅" },
         { name: "Connect", icon: "🤝🏽" },
         { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
@@ -236,8 +228,8 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
         width: '100%',
-        backgroundColor: 'blue',
-        paddingVertical: 20,
+        backgroundColor: '#72bcd4',
+        paddingVertical: 25,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -268,6 +260,19 @@ const styles = StyleSheet.create({
     errorText: {
         color: 'red',
         marginBottom: 10,
+    },
+    listEventButton: {
+        backgroundColor: '#72bcd4',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 5,
+        marginTop: 10,
+        alignItems: 'center',
+    },
+    listEventButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     eventContainer: {
         width: '100%',

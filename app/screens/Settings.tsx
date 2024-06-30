@@ -12,11 +12,6 @@ const Settings = ({ navigation }: RouterProps) => {
         FIREBASE_AUTH.signOut();
     };
 
-    const handleChangeDetails = () => {
-        // Navigate to a screen where users can update their profile details
-        navigation.navigate('EditProfile');
-    };
-
     const handleNotificationSettings = () => {
         // Navigate to a screen where users can manage notification settings
         navigation.navigate('NotificationSettings');
@@ -31,9 +26,6 @@ const Settings = ({ navigation }: RouterProps) => {
         <View style={styles.container}>
             <Header />
             <View style={styles.optionContainer}>
-                <TouchableOpacity onPress={handleChangeDetails} style={styles.optionButton}>
-                    <Text style={styles.optionText}>Change Details</Text>
-                </TouchableOpacity>
                 <TouchableOpacity onPress={handleNotificationSettings} style={styles.optionButton}>
                     <Text style={styles.optionText}>Notification Settings</Text>
                 </TouchableOpacity>
@@ -60,8 +52,9 @@ const Header = () => {
 const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
-        { name: "Events", icon: "🎫" },
-        { name: "Matches", icon: "🤝🏽" },
+        { name: "Events", icon: "📅" },
+        { name: "Connect", icon: "🤝🏽" },
+        { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
     ];
 

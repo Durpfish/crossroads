@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { collection, getDocs, setDoc, doc, query, where, getDoc, writeBatch } from 'firebase/firestore';
@@ -11,16 +11,22 @@ interface ConnectProps {
 const Connect = ({ navigation }: ConnectProps) => {
     const [profiles, setProfiles] = useState<any[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [matchedUserIds, setMatchedUserIds] = useState<string[]>([]);
     const user = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
         const fetchProfiles = async () => {
             try {
+                const matchedUsersQuery = query(collection(FIREBASE_FIRESTORE, 'matches'), where('userId', '==', user.uid));
+                const matchedUsersSnapshot = await getDocs(matchedUsersQuery);
+                const matchedIds = matchedUsersSnapshot.docs.map(doc => doc.data().matchedUserId);
+                setMatchedUserIds(matchedIds);
+
                 const querySnapshot = await getDocs(collection(FIREBASE_FIRESTORE, 'profiles'));
                 const profilesData: any[] = [];
                 querySnapshot.forEach((doc) => {
                     const profileData = doc.data();
-                    if (profileData.userId !== user.uid) {
+                    if (profileData.userId !== user.uid && !matchedIds.includes(profileData.userId)) {
                         profilesData.push({ id: doc.id, ...profileData });
                     }
                 });
@@ -43,47 +49,54 @@ const Connect = ({ navigation }: ConnectProps) => {
 
     const handleAccept = async () => {
         if (profiles.length === 0) return;
-    
+
         const likedUserId = profiles[currentIndex].userId;
-    
+
         try {
             // Set the like from the current user to the liked user
             await setDoc(doc(FIREBASE_FIRESTORE, 'likes', `${user.uid}_${likedUserId}`), {
                 userId: user.uid,
                 likedUserId: likedUserId,
             });
-    
+
             // Check if the liked user has already liked the current user
             const mutualLikeDoc = await getDoc(doc(FIREBASE_FIRESTORE, 'likes', `${likedUserId}_${user.uid}`));
             if (mutualLikeDoc.exists()) {
-                // If mutual like exists, create match documents
-                await createMatch(user.uid, likedUserId);
-                await createMatch(likedUserId, user.uid);
+                const profile = profiles[currentIndex];
+                // Create batch for writing match documents
+                const batch = writeBatch(FIREBASE_FIRESTORE);
+
+                const matchDocRef1 = doc(FIREBASE_FIRESTORE, 'matches', `${user.uid}_${likedUserId}`);
+                const matchDocRef2 = doc(FIREBASE_FIRESTORE, 'matches', `${likedUserId}_${user.uid}`);
+
+                batch.set(matchDocRef1, {
+                    userId: user.uid,
+                    matchedUserId: likedUserId,
+                    matchedUserName: profile.profileName,
+                    matchedUserProfilePic: profile.profileImage,
+                });
+                batch.set(matchDocRef2, {
+                    userId: likedUserId,
+                    matchedUserId: user.uid,
+                    matchedUserName: user.displayName || user.email,
+                    matchedUserProfilePic: user.photoURL, // Ensure this is the user's profile picture
+                });
+
+                await batch.commit();
+
+                // Remove the matched user from the profiles list
+                setProfiles(prevProfiles => prevProfiles.filter(profile => profile.userId !== likedUserId));
             }
         } catch (error) {
             console.error('Error handling like: ', error);
         }
-    
+
         if (currentIndex < profiles.length - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
             setCurrentIndex(0);
         }
     };
-    
-    const createMatch = async (userId, matchedUserId) => {
-        const userProfileDoc = await getDoc(doc(FIREBASE_FIRESTORE, 'profiles', matchedUserId));
-        if (userProfileDoc.exists()) {
-            const profileData = userProfileDoc.data();
-            await setDoc(doc(FIREBASE_FIRESTORE, 'matches', `${userId}_${matchedUserId}`), {
-                userId: userId,
-                matchedUserId: matchedUserId,
-                matchedUserName: profileData.profileName,
-                matchedUserProfilePic: profileData.profileImage,
-            });
-        }
-    };
-    
 
     const navigateToEvents = () => {
         navigation.navigate('Events');
@@ -127,7 +140,7 @@ const Connect = ({ navigation }: ConnectProps) => {
 const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
-        { name: "Events", icon: "🎫" },
+        { name: "Events", icon: "📅" },
         { name: "Connect", icon: "🤝🏽" },
         { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },

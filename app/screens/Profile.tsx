@@ -162,7 +162,6 @@ const Header: React.FC<HeaderProps> = ({ navigation }) => {
 
     return (
         <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>CrossRoads</Text>
             <TouchableOpacity onPress={navigateToSettings} style={styles.settingsIcon}>
                 <Text style={styles.tabIcon}>{"⚙️"}</Text>
             </TouchableOpacity>
@@ -180,7 +179,7 @@ const ProfileHeader = ({ profileImage }: { profileImage: string | null }) => {
                     <Text style={styles.placeholderText}>No Image</Text>
                 </View>
             )}
-            <Text style={styles.profileText}>Profile</Text>
+            <Text style={styles.profileText}>Your Profile</Text>
         </View>
     );
 };
@@ -206,7 +205,7 @@ const ImageGrid = ({ gridImages, handleImageUpload }: { gridImages: string[], ha
 const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
-        { name: "Events", icon: "🎫" },
+        { name: "Events", icon: "📅" },
         { name: "Connect", icon: "🤝🏽" },
         { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
@@ -239,12 +238,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         width: '100%',
-        backgroundColor: 'blue',
-        paddingVertical: 20,
+        backgroundColor: '#72bcd4',
+        paddingVertical: 25,
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingHorizontal: 10,
+        zIndex:2,
     },
     headerText: {
         color: 'white',
@@ -271,6 +271,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
+        zIndex: 1,
     },
     profileText: {
         color: 'black',
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
         marginTop: 20, // Add some spacing from the grids
     },
     uploadButton: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#72bcd4',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 5,
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     saveButton: {
-        backgroundColor: '#2196F3',
+        backgroundColor: '#72bcd4',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 5,
@@ -379,8 +380,8 @@ const styles = StyleSheet.create({
     },
     settingsIcon: {
         position: 'absolute',
-        right: 20,
-        top: 20,
+        right: 10,  // Changed to reduce margin to right edge
+        top: 100,    // Adjusted to move down 15px from the original position
         padding: 10,
         zIndex: 1,
     },
