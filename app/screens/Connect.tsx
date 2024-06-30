@@ -56,27 +56,9 @@ const Connect = ({ navigation }: ConnectProps) => {
             // Check if the liked user has already liked the current user
             const mutualLikeDoc = await getDoc(doc(FIREBASE_FIRESTORE, 'likes', `${likedUserId}_${user.uid}`));
             if (mutualLikeDoc.exists()) {
-                const profile = profiles[currentIndex];
-                // Create batch for writing match documents
-                const batch = writeBatch(FIREBASE_FIRESTORE);
-    
-                const matchDocRef1 = doc(FIREBASE_FIRESTORE, 'matches', `${user.uid}_${likedUserId}`);
-                const matchDocRef2 = doc(FIREBASE_FIRESTORE, 'matches', `${likedUserId}_${user.uid}`);
-    
-                batch.set(matchDocRef1, {
-                    userId: user.uid,
-                    matchedUserId: likedUserId,
-                    matchedUserName: profile.profileName,
-                    matchedUserProfilePic: profile.profileImage,
-                });
-                batch.set(matchDocRef2, {
-                    userId: likedUserId,
-                    matchedUserId: user.uid,
-                    matchedUserName: user.displayName || user.email,
-                    matchedUserProfilePic: user.photoURL, // Ensure this is the user's profile picture
-                });
-    
-                await batch.commit();
+                // If mutual like exists, create match documents
+                await createMatch(user.uid, likedUserId);
+                await createMatch(likedUserId, user.uid);
             }
         } catch (error) {
             console.error('Error handling like: ', error);
@@ -88,6 +70,20 @@ const Connect = ({ navigation }: ConnectProps) => {
             setCurrentIndex(0);
         }
     };
+    
+    const createMatch = async (userId, matchedUserId) => {
+        const userProfileDoc = await getDoc(doc(FIREBASE_FIRESTORE, 'profiles', matchedUserId));
+        if (userProfileDoc.exists()) {
+            const profileData = userProfileDoc.data();
+            await setDoc(doc(FIREBASE_FIRESTORE, 'matches', `${userId}_${matchedUserId}`), {
+                userId: userId,
+                matchedUserId: matchedUserId,
+                matchedUserName: profileData.profileName,
+                matchedUserProfilePic: profileData.profileImage,
+            });
+        }
+    };
+    
 
     const navigateToEvents = () => {
         navigation.navigate('Events');
