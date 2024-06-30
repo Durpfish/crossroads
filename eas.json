@@ -5,13 +5,13 @@
   "build": {
     "production": {
       "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "GOOGLE_SERVICES_JSON_BASE64": "$GOOGLE_SERVICES_JSON"
-      },
-      "hooks": {
-        "postinstall": "echo $GOOGLE_SERVICES_JSON_BASE64 | base64 --decode > android/app/google-services.json"
+        "buildType": "apk",
+        "env": {
+          "GOOGLE_SERVICES_JSON_BASE64": "$GOOGLE_SERVICES_JSON"
+        },
+        "hooks": {
+          "postinstall": "echo $GOOGLE_SERVICES_JSON_BASE64 | base64 --decode > android/app/google-services.json"
+        }
       }
     }
   }
