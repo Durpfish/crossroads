@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:350698148646:android:ce5fab5d2a6f2cde3a27e7",
+        "mobilesdk_app_id": "1:350698148646:android:1bfb7dedd7cd0a6e3a27e7",
         "android_client_info": {
-          "package_name": "cross.my.roads"
+          "package_name": "crossroads.orbital"
         }
       },
       "oauth_client": [],
