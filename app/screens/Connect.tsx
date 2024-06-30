@@ -65,13 +65,13 @@ const Connect = ({ navigation }: ConnectProps) => {
                 await setDoc(doc(FIREBASE_FIRESTORE, 'matches', `${user.uid}_${likedUserId}`), {
                     userId: user.uid,
                     matchedUserId: likedUserId,
-                    matchedUserName: profile.profileName, //TODO CHECK
+                    matchedUserName: profile.profileName,
                     matchedUserProfilePic: profile.profileImage,
                 });
                 await setDoc(doc(FIREBASE_FIRESTORE, 'matches', `${likedUserId}_${user.uid}`), {
                     userId: likedUserId,
                     matchedUserId: user.uid,
-                    matchedUserName: user.displayName, // TODO CHECK
+                    matchedUserName: user.displayName || user.email, // Assumes displayName or email is set for the user
                     matchedUserProfilePic: profile.profileImage, // Assumes profile image is same for both
                 });
             }
