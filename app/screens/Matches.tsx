@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
@@ -16,39 +16,40 @@ interface MatchedUser {
 
 const Matches = ({ navigation }: RouterProps) => {
     const [matchedUsers, setMatchedUsers] = useState<MatchedUser[]>([]);
+    const [loading, setLoading] = useState(true);
     const user = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
-        const fetchMatches = async () => {
-            try {
-                const q = query(collection(FIREBASE_FIRESTORE, 'matches'), where('userId', '==', user.uid)); //TODO check
-                const querySnapshot = await getDocs(q);
-                const matchesData: MatchedUser[] = [];
-                querySnapshot.forEach((doc) => {
-                    const matchData = doc.data();
+        const q = query(collection(FIREBASE_FIRESTORE, 'matches'), where('userId', '==', user.uid));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const matchesData: MatchedUser[] = [];
+            querySnapshot.forEach((doc) => {
+                const matchData = doc.data();
+                if (matchData.matchedUserName && matchData.matchedUserProfilePic) {
                     matchesData.push({
                         id: matchData.matchedUserId,
                         name: matchData.matchedUserName,
                         profilePic: matchData.matchedUserProfilePic,
                     });
-                });
-                setMatchedUsers(matchesData);
-            } catch (error) {
-                console.error('Error fetching matches: ', error);
-            }
-        };
+                }
+            });
+            setMatchedUsers(matchesData);
+            setLoading(false);
+        }, (error) => {
+            console.error('Error fetching matches: ', error);
+            setLoading(false);
+        });
 
-        fetchMatches();
+        return () => unsubscribe();
     }, [user]);
 
     const handleConnectPress = (user: MatchedUser) => {
         navigation.navigate('Message', {
             recipientId: user.id,
-            recipientEmail: user.name // Assuming the name can be used as an email for testing purposes 
+            recipientName: user.name
         });
     };
 
-    // Render item for each matched user
     const renderMatchedUser = ({ item }: { item: MatchedUser }) => (
         <TouchableOpacity style={styles.userItem} onPress={() => handleConnectPress(item)}>
             <View style={styles.userDetails}>
@@ -68,15 +69,16 @@ const Matches = ({ navigation }: RouterProps) => {
             <Header />
             <Text style={styles.title}>Your Matches</Text>
             <ConnectHeader />
-
-            {/* Display matched users */}
-            <FlatList
-                data={matchedUsers}
-                renderItem={renderMatchedUser}
-                keyExtractor={(item) => item.id}
-                style={styles.flatList}
-            />
-
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+                <FlatList
+                    data={matchedUsers}
+                    renderItem={renderMatchedUser}
+                    keyExtractor={(item) => item.id}
+                    style={styles.flatList}
+                />
+            )}
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -175,7 +177,7 @@ const styles = StyleSheet.create({
     },
     userItem: {
         flexDirection: 'row',
-        justifyContent: 'space-between', // Aligns items along the row, pushing message button to the right
+        justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: '#fff',
         borderWidth: 1,
