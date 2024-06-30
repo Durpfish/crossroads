@@ -2,13 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
-import { collection, getDocs, setDoc, doc, query, where, getDoc } from 'firebase/firestore';
+import { collection, getDocs, setDoc, doc, query, where, getDoc, writeBatch } from 'firebase/firestore';
 
 interface ConnectProps {
-    navigation: NavigationProp<any, any>;
-}
-
-interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
@@ -24,7 +20,7 @@ const Connect = ({ navigation }: ConnectProps) => {
                 const profilesData: any[] = [];
                 querySnapshot.forEach((doc) => {
                     const profileData = doc.data();
-                    if (profileData.userId !== user.uid) { // Ensure this check is correct
+                    if (profileData.userId !== user.uid) {
                         profilesData.push({ id: doc.id, ...profileData });
                     }
                 });
@@ -41,48 +37,55 @@ const Connect = ({ navigation }: ConnectProps) => {
         if (currentIndex < profiles.length - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
-            setCurrentIndex(0); // Reset to the first profile if at the end
+            setCurrentIndex(0);
         }
     };
 
     const handleAccept = async () => {
         if (profiles.length === 0) return;
-
+    
         const likedUserId = profiles[currentIndex].userId;
-
+    
         try {
-            // Add like to the "likes" collection
+            // Set the like from the current user to the liked user
             await setDoc(doc(FIREBASE_FIRESTORE, 'likes', `${user.uid}_${likedUserId}`), {
                 userId: user.uid,
                 likedUserId: likedUserId,
             });
-
+    
             // Check if the liked user has already liked the current user
             const mutualLikeDoc = await getDoc(doc(FIREBASE_FIRESTORE, 'likes', `${likedUserId}_${user.uid}`));
             if (mutualLikeDoc.exists()) {
-                // Add match to the "matches" collection
                 const profile = profiles[currentIndex];
-                await setDoc(doc(FIREBASE_FIRESTORE, 'matches', `${user.uid}_${likedUserId}`), {
+                // Create batch for writing match documents
+                const batch = writeBatch(FIREBASE_FIRESTORE);
+    
+                const matchDocRef1 = doc(FIREBASE_FIRESTORE, 'matches', `${user.uid}_${likedUserId}`);
+                const matchDocRef2 = doc(FIREBASE_FIRESTORE, 'matches', `${likedUserId}_${user.uid}`);
+    
+                batch.set(matchDocRef1, {
                     userId: user.uid,
                     matchedUserId: likedUserId,
-                    matchedUserName: profile.profileName, //TODO CHECK
+                    matchedUserName: profile.profileName,
                     matchedUserProfilePic: profile.profileImage,
                 });
-                await setDoc(doc(FIREBASE_FIRESTORE, 'matches', `${likedUserId}_${user.uid}`), {
+                batch.set(matchDocRef2, {
                     userId: likedUserId,
                     matchedUserId: user.uid,
-                    matchedUserName: user.displayName, // TODO CHECK
-                    matchedUserProfilePic: profile.profileImage, // Assumes profile image is same for both
+                    matchedUserName: user.displayName || user.email,
+                    matchedUserProfilePic: user.photoURL, // Ensure this is the user's profile picture
                 });
+    
+                await batch.commit();
             }
         } catch (error) {
             console.error('Error handling like: ', error);
         }
-
+    
         if (currentIndex < profiles.length - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
-            setCurrentIndex(0); // Reset to the first profile if at the end
+            setCurrentIndex(0);
         }
     };
 
