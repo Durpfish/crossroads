@@ -13,6 +13,8 @@ import ProfileSummary from './app/screens/ProfileSummary';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { FIREBASE_AUTH } from './firebaseConfig';
+import firebaseApp from './firebaseConfig';
+
 
 const Stack = createNativeStackNavigator();
 const InsideStack = createNativeStackNavigator();

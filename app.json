@@ -12,13 +12,15 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "crossroads.orbital"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "googleServicesFile": "./google-services.json",
       "package": "crossroads.orbital"
     },
     "web": {
@@ -28,6 +30,21 @@
       "eas": {
         "projectId": "684bd61b-e0a7-482d-9423-1777e74816e2"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 31,
+            "targetSdkVersion": 31,
+            "minSdkVersion": 21,
+            "buildToolsVersion": "31.0.0"
+          }
+        }
+      ]
+    ]
+
+    
   }
 }

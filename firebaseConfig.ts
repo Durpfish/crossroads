@@ -2,6 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import firebase from '@react-native-firebase/app';
+import '@react-native-firebase/firestore';
 
 
 const firebaseConfig = {
@@ -12,9 +14,12 @@ const firebaseConfig = {
     messagingSenderId: "350698148646",
     appId: "1:350698148646:web:40670b4732f7bfcb3a27e7"
 };
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
 export const FIREBASE_APP = initializeApp(firebaseConfig);
 export const FIREBASE_AUTH = getAuth(FIREBASE_APP);
 export const FIREBASE_FIRESTORE = getFirestore(FIREBASE_APP);
 export const FIREBASE_STORAGE = getStorage(FIREBASE_APP);
-
+export {firebase};
