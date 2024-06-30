@@ -7,9 +7,9 @@
       "android": {
         "buildType": "apk",
         "env": {
-          "GOOGLE_SERVICES_JSON": "$GOOGLE_SERVICES_JSON"
+          "GOOGLE_SERVICES_JSON": "google-services.json"
         },
-        "prebuildCommand": "mv $GOOGLE_SERVICES_JSON ./android/app/google-services.json"
+        "prebuildCommand": "cp $GOOGLE_SERVICES_JSON ./android/app/google-services.json"
       }
     }
   }
