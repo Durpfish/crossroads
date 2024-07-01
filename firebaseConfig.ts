@@ -2,24 +2,21 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import firebase from '@react-native-firebase/app';
-import '@react-native-firebase/firestore';
 
-
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAC5SxUZV2m7r5CUdru54FqjKl4N9LKla4",
     authDomain: "crossroads-cb.firebaseapp.com",
     projectId: "crossroads-cb",
     storageBucket: "crossroads-cb.appspot.com",
     messagingSenderId: "350698148646",
-    appId: "1:350698148646:web:40670b4732f7bfcb3a27e7"
+    appId: "1:350698148646:android:1bfb7dedd7cd0a6e3a27e7"
 };
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
 
-export const FIREBASE_APP = initializeApp(firebaseConfig);
-export const FIREBASE_AUTH = getAuth(FIREBASE_APP);
-export const FIREBASE_FIRESTORE = getFirestore(FIREBASE_APP);
-export const FIREBASE_STORAGE = getStorage(FIREBASE_APP);
-export {firebase};
+// Initialize Firebase
+const FIREBASE_APP = initializeApp(firebaseConfig);
+const FIREBASE_AUTH = getAuth(FIREBASE_APP);
+const FIREBASE_FIRESTORE = getFirestore(FIREBASE_APP);
+const FIREBASE_STORAGE = getStorage(FIREBASE_APP);
+
+export { FIREBASE_APP, FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE };

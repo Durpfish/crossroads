@@ -178,11 +178,12 @@ const Events = ({ navigation }: RouterProps) => {
                 data={events}
                 renderItem={renderEventItem}
                 keyExtractor={(item) => item.id}
-                onRefresh={handleRefresh}
-                refreshing={refreshing}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
             />
+            <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
+                <Text style={styles.refreshButtonText}>Refresh</Text>
+            </TouchableOpacity>
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -322,6 +323,21 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 12,
+    },
+    refreshButton: {
+        backgroundColor: '#72bcd4',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 5,
+        marginTop: 10,
+        alignItems: 'center',
+        position: 'absolute',
+        bottom: 90,
+    },
+    refreshButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

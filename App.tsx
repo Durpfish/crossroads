@@ -12,8 +12,7 @@ import Message from './app/screens/Message';
 import ProfileSummary from './app/screens/ProfileSummary';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { FIREBASE_AUTH } from './firebaseConfig';
-import firebaseApp from './firebaseConfig';
+import { FIREBASE_APP, FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from './firebaseConfig';
 
 
 const Stack = createNativeStackNavigator();
