@@ -27,7 +27,7 @@ const Matches = ({ navigation }: RouterProps) => {
             const matchesData: MatchedUser[] = [];
             querySnapshot.forEach((doc) => {
                 const matchData = doc.data();
-                if (matchData.matchedUserName && matchData.matchedUserProfilePic) {
+                if (matchData.matchedUserName) {
                     matchesData.push({
                         id: matchData.matchedUserId,
                         name: matchData.matchedUserName,

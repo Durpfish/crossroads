@@ -10,6 +10,7 @@ interface ConnectProps {
 
 const Connect = ({ navigation }: ConnectProps) => {
     const [profiles, setProfiles] = useState<any[]>([]);
+    const [singleProfileData, setSingleProfileData] = useState<any[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [matchedUserIds, setMatchedUserIds] = useState<string[]>([]);
     const user = FIREBASE_AUTH.currentUser;
@@ -23,6 +24,8 @@ const Connect = ({ navigation }: ConnectProps) => {
                 setMatchedUserIds(matchedIds);
 
                 const querySnapshot = await getDocs(collection(FIREBASE_FIRESTORE, 'profiles'));
+                const docRef = doc(FIREBASE_FIRESTORE, 'profiles', user.uid);
+                const docSnap = await getDoc(docRef);
                 const profilesData: any[] = [];
                 querySnapshot.forEach((doc) => {
                     const profileData = doc.data();
@@ -30,6 +33,7 @@ const Connect = ({ navigation }: ConnectProps) => {
                         profilesData.push({ id: doc.id, ...profileData });
                     }
                 });
+                setSingleProfileData(docSnap.data())
                 setProfiles(profilesData);
             } catch (error) {
                 console.error('Error fetching profiles: ', error);
@@ -78,7 +82,7 @@ const Connect = ({ navigation }: ConnectProps) => {
                 batch.set(matchDocRef2, {
                     userId: likedUserId,
                     matchedUserId: user.uid,
-                    matchedUserName: user.displayName || user.email,
+                    matchedUserName: singleProfileData.profileName || user.email,
                     matchedUserProfilePic: user.photoURL, // Ensure this is the user's profile picture
                 });
 

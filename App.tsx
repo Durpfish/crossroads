@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './app/screens/Login';
 // import Welcome from './app/screens/Welcome';
 import Home from './app/screens/Home';
+import NewsFeed from './app/screens/NewsFeed';
 import Events from './app/screens/Events';
 import Connect from './app/screens/Connect';
 import Matches from './app/screens/Matches';
@@ -24,6 +25,11 @@ function InsideLayout() {
       <InsideStack.Screen 
         name="Home" 
         component={Home} 
+        options={{ headerShown: false, animation: 'none' }}
+      />
+      <InsideStack.Screen 
+        name="NewsFeed" 
+        component={NewsFeed} 
         options={{ headerShown: false, animation: 'none' }}
       />
       <InsideStack.Screen 
