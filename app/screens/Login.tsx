@@ -2,8 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ActivityIndicator, KeyboardAvoidingView, Image, TouchableOpacity } from 'react-native';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { NavigationProp } from '@react-navigation/native';
 
-const Login = () => {
+interface LoginProps {
+    navigation: NavigationProp<any, any>;
+}
+
+const Login = ({ navigation }: LoginProps) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -28,6 +33,7 @@ const Login = () => {
             const response = await createUserWithEmailAndPassword(auth, email, password);
             console.log(response);
             alert('Check your email for verification!');
+            navigation.navigate('Registration', { userId: response.user.uid });
         } catch (error: any) {
             console.log(error);
             alert('Sign up failed! ' + error.message);

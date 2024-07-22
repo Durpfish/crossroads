@@ -83,7 +83,7 @@ const Connect = ({ navigation }: ConnectProps) => {
                     userId: likedUserId,
                     matchedUserId: user.uid,
                     matchedUserName: singleProfileData.profileName || user.email,
-                    matchedUserProfilePic: user.photoURL, // Ensure this is the user's profile picture
+                    matchedUserProfilePic: singleProfileData.profileImage || user.photoURL, // Ensure this is the user's profile picture
                 });
 
                 await batch.commit();

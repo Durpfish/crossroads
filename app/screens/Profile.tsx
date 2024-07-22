@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
@@ -11,12 +11,7 @@ interface RouterProps {
     navigation: NavigationProp<any, any>;
 }
 
-interface HeaderProps {
-    navigation: NavigationProp<any, any>;
-}
-
 const Profile = ({ navigation }: RouterProps) => {
-    const [profileImage, setProfileImage] = useState<string | null>(null);
     const [gridImages, setGridImages] = useState<string[]>(Array(6).fill(null));
     const [profileName, setProfileName] = useState<string>('');
     const [age, setAge] = useState<string>('');
@@ -30,7 +25,6 @@ const Profile = ({ navigation }: RouterProps) => {
 
                 if (docSnap.exists()) {
                     const profileData = docSnap.data();
-                    setProfileImage(profileData.profileImage || null);
                     setGridImages(profileData.gridImages || Array(6).fill(null));
                     setProfileName(profileData.profileName || '');
                     setAge(profileData.age || '');
@@ -54,17 +48,12 @@ const Profile = ({ navigation }: RouterProps) => {
             const uploadUrl = await uploadImageAsync(imageUri);
 
             if (user) {
-                if (index === -1) {
-                    setProfileImage(uploadUrl);
-                    await AsyncStorage.setItem(`${user.uid}_profileImage`, uploadUrl);
-                } else {
-                    setGridImages(prevGridImages => {
-                        const newGridImages = [...prevGridImages];
-                        newGridImages[index] = uploadUrl;
-                        AsyncStorage.setItem(`${user.uid}_gridImages`, JSON.stringify(newGridImages));
-                        return newGridImages;
-                    });
-                }
+                setGridImages(prevGridImages => {
+                    const newGridImages = [...prevGridImages];
+                    newGridImages[index] = uploadUrl;
+                    AsyncStorage.setItem(`${user.uid}_gridImages`, JSON.stringify(newGridImages));
+                    return newGridImages;
+                });
                 saveProfileToFirestore(user.uid, uploadUrl, gridImages, profileName, age);
             }
         }
@@ -108,54 +97,17 @@ const Profile = ({ navigation }: RouterProps) => {
         }
     };
 
-    const handleSaveProfile = async () => {
-        if (user) {
-            console.log('Saving profile...');
-            console.log('Profile Image:', profileImage);
-            console.log('Grid Images:', gridImages);
-            console.log('Profile Name:', profileName);
-            console.log('Age:', age);
-
-            await AsyncStorage.setItem(`${user.uid}_profileName`, profileName);
-            await AsyncStorage.setItem(`${user.uid}_age`, age);
-            saveProfileToFirestore(user.uid, profileImage, gridImages, profileName, age);
-        }
-    };
-
     return (
         <View style={styles.container}>
             <Header navigation={navigation} />
-            <ProfileHeader profileImage={profileImage} />
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Enter Profile Name"
-                    value={profileName}
-                    onChangeText={setProfileName}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Enter Age"
-                    value={age}
-                    onChangeText={setAge}
-                    keyboardType="numeric"
-                />
-            </View>
+            <ProfileHeader profileImage={gridImages[0]} profileName={profileName} age={age} />
             <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity onPress={() => handleImageUpload(-1)} style={styles.uploadButton}>
-                    <Text style={styles.uploadButtonText}>Upload Profile Image</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleSaveProfile} style={styles.saveButton}>
-                    <Text style={styles.saveButtonText}>Save Profile</Text>
-                </TouchableOpacity>
-            </View>
             <NavigationTab navigation={navigation} />
         </View>
     );
 };
 
-const Header: React.FC<HeaderProps> = ({ navigation }) => {
+const Header = ({ navigation }: { navigation: NavigationProp<any, any> }) => {
     const navigateToSettings = () => {
         navigation.navigate('Settings');
     };
@@ -169,7 +121,7 @@ const Header: React.FC<HeaderProps> = ({ navigation }) => {
     );
 };
 
-const ProfileHeader = ({ profileImage }: { profileImage: string | null }) => {
+const ProfileHeader = ({ profileImage, profileName, age }: { profileImage: string | null, profileName: string, age: string }) => {
     return (
         <View style={styles.profileContainer}>
             {profileImage ? (
@@ -179,7 +131,7 @@ const ProfileHeader = ({ profileImage }: { profileImage: string | null }) => {
                     <Text style={styles.placeholderText}>No Image</Text>
                 </View>
             )}
-            <Text style={styles.profileText}>Your Profile</Text>
+            <Text style={styles.profileText}>{`${profileName}, ${age}`}</Text>
         </View>
     );
 };
@@ -246,22 +198,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         zIndex:2,
     },
-    headerText: {
-        color: 'white',
-        fontSize: 24,
-        textAlign: 'center',
-    },
-    inputContainer: {
-        width: '80%',
-        marginVertical: 10, // Reduce margin between input boxes
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        padding: 10,
-        marginVertical: 5, // Reduce vertical margin
-    },
     profileContainer: {
         marginTop: -110,
         width: '100%',
@@ -298,37 +234,6 @@ const styles = StyleSheet.create({
     placeholderText: {
         color: '#757575',
         fontSize: 16,
-    },
-    text: {
-        textAlign: 'center',
-        fontSize: 18,
-        marginVertical: 20,
-    },
-    buttonContainer: {
-        flexDirection: 'row', // Align buttons in a row
-        justifyContent: 'space-around', // Distribute space evenly
-        width: '80%', // Ensure the container doesn't overlap with grids
-        marginTop: 20, // Add some spacing from the grids
-    },
-    uploadButton: {
-        backgroundColor: '#72bcd4',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 5,
-    },
-    uploadButtonText: {
-        color: '#fff',
-        textAlign: 'center',
-    },
-    saveButton: {
-        backgroundColor: '#72bcd4',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 5,
-    },
-    saveButtonText: {
-        color: '#fff',
-        textAlign: 'center',
     },
     gridContainer: {
         flexDirection: 'row',
@@ -380,8 +285,8 @@ const styles = StyleSheet.create({
     },
     settingsIcon: {
         position: 'absolute',
-        right: 10,  // Changed to reduce margin to right edge
-        top: 100,    // Adjusted to move down 15px from the original position
+        right: 10,
+        top: 100,
         padding: 10,
         zIndex: 1,
     },

@@ -27,15 +27,13 @@ const Matches = ({ navigation }: RouterProps) => {
             const matchesData: MatchedUser[] = [];
             querySnapshot.forEach((doc) => {
                 const matchData = doc.data();
-                if (matchData.matchedUserName) {
-                    matchesData.push({
-                        id: matchData.matchedUserId,
-                        name: matchData.matchedUserName,
-                        profilePic: matchData.matchedUserProfilePic,
-                        age: matchData.matchedUserAge,
-                        additionalPics: matchData.additionalPics || [],
-                    });
-                }
+                matchesData.push({
+                    id: matchData.matchedUserId,
+                    name: matchData.matchedUserName,
+                    profilePic: matchData.matchedUserProfilePic,
+                    age: matchData.matchedUserAge,
+                    additionalPics: matchData.additionalPics || [],
+                });
             });
             setMatchedUsers(matchesData);
             setLoading(false);
@@ -78,7 +76,6 @@ const Matches = ({ navigation }: RouterProps) => {
         <View style={styles.container}>
             <Header />
             <Text style={styles.title}>Your Matches</Text>
-            <ConnectHeader />
             {loading ? (
                 <ActivityIndicator size="large" color="#0000ff" />
             ) : (
@@ -97,14 +94,6 @@ const Matches = ({ navigation }: RouterProps) => {
 const Header = () => {
     return (
         <View style={styles.headerContainer}>
-        </View>
-    );
-};
-
-const ConnectHeader = () => {
-    return (
-        <View style={styles.connectContainer}>
-            <Text style={styles.connectText}>Connect</Text>
         </View>
     );
 };
@@ -156,29 +145,6 @@ const styles = StyleSheet.create({
         paddingVertical: 25,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    headerText: {
-        color: 'white',
-        fontSize: 24,
-        textAlign: 'center',
-    },
-    connectContainer: {
-        top: -350,
-        width: '100%',
-        paddingVertical: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'red', 
-    },
-    connectText: {
-        color: 'black',
-        fontSize: 24,
-        textAlign: 'center',
-    },
-    text: {
-        textAlign: 'center',
-        fontSize: 18,
-        marginVertical: 20,
     },
     flatList: {
         width: '100%',

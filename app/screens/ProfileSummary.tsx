@@ -36,7 +36,8 @@ const ProfileSummary = ({ navigation, route }: RouterProps) => {
     );
   }
 
-  const gridImages = [profile.profileImage, ...profile.gridImages];
+  // Ensure no duplication of profileImage in gridImages
+  const gridImages = [profile.profileImage, ...profile.gridImages].filter((image, index, self) => image && self.indexOf(image) === index);
   const gridData = gridImages.slice(0, 6);
   while (gridData.length < 6) {
     gridData.push(null);
