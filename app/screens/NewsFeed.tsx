@@ -59,20 +59,16 @@ const NewsFeed = ({ navigation }: RouterProps) => {
     }, [user]);
 
     const renderImage = ({ item }: { item: UserImage }) => (
-    <View style={styles.imageContainer}>
-        <View style={styles.profileContainer}>
-            <Image source={{ uri: item.profileImage }} style={styles.profileImage} />
-            <View style={styles.profileTextContainer}>
-                <Text style={styles.profileName}>{item.profileName}</Text>
+        <View style={styles.imageContainer}>
+            <View style={styles.profileContainer}>
+                <Image source={{ uri: item.profileImage }} style={styles.profileImage} />
+                <View style={styles.profileTextContainer}>
+                    <Text style={styles.profileName}>{item.profileName}</Text>
+                </View>
             </View>
+            <Image source={{ uri: item.image }} style={styles.image} />
         </View>
-        <Image
-            source={{ uri: item.image }}
-            style={styles.image}
-            onError={() => {/* Handle image load error */}}
-        />
-    </View>
-);
+    );
 
     return (
         <View style={styles.container}>
