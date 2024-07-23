@@ -59,6 +59,7 @@ const ProfileSummary = ({ navigation, route }: RouterProps) => {
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{profile.profileName}</Text>
         <Text style={styles.age}>Age: {profile.age}</Text>
+        {profile.aboutMe && <Text style={styles.aboutMe}>{profile.aboutMe}</Text>}
       </View>
     </View>
   );
@@ -111,6 +112,12 @@ const styles = StyleSheet.create({
   age: {
     fontSize: 18,
     marginTop: 5,
+  },
+  aboutMe: {
+    fontSize: 16,
+    marginTop: 10,
+    textAlign: 'center',
+    paddingHorizontal: 10,
   },
 });
 

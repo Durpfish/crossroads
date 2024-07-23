@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface RouterProps {
@@ -15,6 +15,7 @@ const Profile = ({ navigation }: RouterProps) => {
     const [gridImages, setGridImages] = useState<string[]>(Array(6).fill(null));
     const [profileName, setProfileName] = useState<string>('');
     const [age, setAge] = useState<string>('');
+    const [aboutMe, setAboutMe] = useState<string>('');
     const user = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
@@ -28,6 +29,7 @@ const Profile = ({ navigation }: RouterProps) => {
                     setGridImages(profileData.gridImages || Array(6).fill(null));
                     setProfileName(profileData.profileName || '');
                     setAge(profileData.age || '');
+                    setAboutMe(profileData.aboutMe || '');
                 }
             }
         };
@@ -54,7 +56,7 @@ const Profile = ({ navigation }: RouterProps) => {
                     AsyncStorage.setItem(`${user.uid}_gridImages`, JSON.stringify(newGridImages));
                     return newGridImages;
                 });
-                saveProfileToFirestore(user.uid, uploadUrl, gridImages, profileName, age);
+                saveProfileToFirestore(user.uid, gridImages, profileName, age, aboutMe);
             }
         }
     };
@@ -81,14 +83,14 @@ const Profile = ({ navigation }: RouterProps) => {
         return await getDownloadURL(fileRef);
     };
 
-    const saveProfileToFirestore = async (userId, profileImage, gridImages, profileName, age) => {
+    const saveProfileToFirestore = async (userId, gridImages, profileName, age, aboutMe) => {
         try {
             await setDoc(doc(FIREBASE_FIRESTORE, 'profiles', userId), {
                 userId,
-                profileImage,
                 gridImages,
                 profileName,
                 age,
+                aboutMe,
                 createdAt: new Date(),
             });
             console.log('Profile saved to Firestore');
@@ -97,13 +99,44 @@ const Profile = ({ navigation }: RouterProps) => {
         }
     };
 
+    const handleSaveAboutMe = async () => {
+        if (user) {
+            try {
+                const docRef = doc(FIREBASE_FIRESTORE, 'profiles', user.uid);
+                await updateDoc(docRef, {
+                    aboutMe,
+                });
+                console.log('About Me saved to Firestore');
+            } catch (error) {
+                console.error('Error saving About Me to Firestore: ', error);
+            }
+        }
+    };
+
     return (
-        <View style={styles.container}>
-            <Header navigation={navigation} />
-            <ProfileHeader profileImage={gridImages[0]} profileName={profileName} age={age} />
-            <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                <Header navigation={navigation} />
+                <ProfileHeader profileImage={gridImages[0]} profileName={profileName} age={age} />
+                <View style={styles.aboutMeContainer}>
+                    <TextInput
+                        style={styles.aboutMeInput}
+                        placeholder="Tell us about yourself..."
+                        value={aboutMe}
+                        onChangeText={setAboutMe}
+                        multiline={true}
+                    />
+                    <TouchableOpacity onPress={handleSaveAboutMe} style={styles.saveButton}>
+                        <Text style={styles.saveButtonText}>Save</Text>
+                    </TouchableOpacity>
+                </View>
+                <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
+            </ScrollView>
             <NavigationTab navigation={navigation} />
-        </View>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -182,6 +215,9 @@ const NavigationTab = ({ navigation }: RouterProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    scrollViewContent: {
+        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingTop: 50,
@@ -234,6 +270,33 @@ const styles = StyleSheet.create({
     placeholderText: {
         color: '#757575',
         fontSize: 16,
+    },
+    aboutMeContainer: {
+        alignItems: 'center',
+        marginVertical: 20,
+        width: '90%', // Adjust the width to add padding to the screen edges
+    },
+    aboutMeInput: {
+        width: '100%',
+        height: 100,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        textAlignVertical: 'top',
+        backgroundColor: '#fff',
+        marginBottom: 10, // Add margin bottom to separate from save button
+    },
+    saveButton: {
+        backgroundColor: '#72bcd4',
+        paddingVertical: 8, // Reduce padding for smaller size
+        paddingHorizontal: 15, // Reduce padding for smaller size
+        borderRadius: 8,
+    },
+    saveButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
     },
     gridContainer: {
         flexDirection: 'row',
@@ -293,3 +356,4 @@ const styles = StyleSheet.create({
 });
 
 export default Profile;
+
