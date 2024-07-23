@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, FlatList, Text, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, FlatList, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { collection, addDoc, query, orderBy, onSnapshot, where, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { NavigationProp, RouteProp } from '@react-navigation/native';
@@ -20,7 +20,7 @@ interface Message {
   recipientName: string;
 }
 
-const Message = ({ navigation, route }: RouterProps) => {
+const MessageScreen = ({ navigation, route }: RouterProps) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const user = FIREBASE_AUTH.currentUser;
@@ -95,9 +95,10 @@ const Message = ({ navigation, route }: RouterProps) => {
 
   const renderMessage = ({ item }: { item: Message }) => {
     const timestamp = item.createdAt ? new Date(item.createdAt.seconds * 1000) : new Date();
+    const isCurrentUser = item.userId === user?.uid;
     return (
-      <View style={styles.message}>
-        <Text style={styles.username}>{item.userName}:</Text>
+      <View style={[styles.messageContainer, isCurrentUser ? styles.currentUserMessage : styles.otherUserMessage]}>
+        <Text style={styles.username}>{item.userName}</Text>
         <Text style={styles.text}>{item.text}</Text>
         <Text style={styles.timestamp}>{format(timestamp, 'p, MMMM dd, yyyy')}</Text>
       </View>
@@ -105,49 +106,97 @@ const Message = ({ navigation, route }: RouterProps) => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={90}
+    >
       <FlatList
         data={messages}
         keyExtractor={item => item.id}
         renderItem={renderMessage}
+        contentContainerStyle={styles.messagesList}
       />
-      <TextInput
-        value={message}
-        onChangeText={setMessage}
-        placeholder="Type a message"
-        style={styles.input}
-      />
-      <Button title="Send" onPress={sendMessage} />
-    </View>
+      <View style={styles.inputContainer}>
+        <TextInput
+          value={message}
+          onChangeText={setMessage}
+          placeholder="Type a message"
+          style={styles.input}
+        />
+        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+          <Text style={styles.sendButtonText}>Send</Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f2f2f2',
+  },
+  messagesList: {
     padding: 10,
   },
-  message: {
+  messageContainer: {
+    borderRadius: 15,
+    padding: 10,
     marginVertical: 5,
+    maxWidth: '75%',
+  },
+  currentUserMessage: {
+    backgroundColor: '#d1e7ff',
+    alignSelf: 'flex-end',
+  },
+  otherUserMessage: {
+    backgroundColor: '#fff',
+    alignSelf: 'flex-start',
   },
   username: {
     fontWeight: 'bold',
+    marginBottom: 3,
   },
   text: {
-    marginLeft: 5,
+    fontSize: 16,
   },
   timestamp: {
     fontSize: 10,
     color: 'gray',
-    marginLeft: 5,
+    marginTop: 5,
+    textAlign: 'right',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderColor: '#ccc',
   },
   input: {
+    flex: 1,
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: 10,
-    marginVertical: 10,
-    borderRadius: 5,
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 16,
+  },
+  sendButton: {
+    backgroundColor: '#1E90FF',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginLeft: 10,
+  },
+  sendButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 
-export default Message;
+export default MessageScreen;

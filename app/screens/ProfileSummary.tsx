@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { NavigationProp, RouteProp } from '@react-navigation/native';
 import { FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
@@ -12,6 +12,7 @@ interface RouterProps {
 const ProfileSummary = ({ navigation, route }: RouterProps) => {
   const { userId } = route.params;
   const [profile, setProfile] = useState<any>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -26,7 +27,23 @@ const ProfileSummary = ({ navigation, route }: RouterProps) => {
     };
 
     fetchProfile();
-  }, [userId]);
+
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [userId, navigation]);
+
+  const handleNextImage = () => {
+    if (profile && currentIndex < profile.gridImages.length) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
 
   if (!profile) {
     return (
@@ -36,88 +53,106 @@ const ProfileSummary = ({ navigation, route }: RouterProps) => {
     );
   }
 
-  // Ensure no duplication of profileImage in gridImages
-  const gridImages = [profile.profileImage, ...profile.gridImages].filter((image, index, self) => image && self.indexOf(image) === index);
-  const gridData = gridImages.slice(0, 6);
-  while (gridData.length < 6) {
-    gridData.push(null);
-  }
+  const gridImages = [profile.profileImage, ...profile.gridImages].filter(Boolean);
 
   return (
     <View style={styles.container}>
-      <View style={styles.gridContainer}>
-        {gridData.map((imageUri, index) => (
-          <View key={index} style={styles.gridItem}>
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.gridImage} />
-            ) : (
-              <View style={styles.gridPlaceholder} />
-            )}
-          </View>
-        ))}
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerText}>{profile.profileName}, {profile.age}</Text>
       </View>
-      <View style={styles.infoContainer}>
-        <Text style={styles.name}>{profile.profileName}</Text>
-        <Text style={styles.age}>Age: {profile.age}</Text>
-        {profile.aboutMe && <Text style={styles.aboutMe}>{profile.aboutMe}</Text>}
+      <View style={styles.imageContainer}>
+        {currentIndex > 0 && (
+          <TouchableOpacity style={styles.leftHalf} onPress={handlePrevImage} />
+        )}
+        <Image source={{ uri: gridImages[currentIndex] }} style={styles.image} />
+        {currentIndex < gridImages.length - 1 && (
+          <TouchableOpacity style={styles.rightHalf} onPress={handleNextImage} />
+        )}
       </View>
+      <View style={styles.aboutMeContainer}>
+        <Text style={styles.aboutMeText}>{profile.aboutMe}</Text>
+      </View>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
-const { height } = Dimensions.get('window');
-const gridHeight = height * 0.7;
+const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: '#fff',
   },
-  gridContainer: {
+  headerContainer: {
     width: '100%',
-    height: gridHeight,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  gridItem: {
-    width: '45%',
-    aspectRatio: 1,
-    margin: '1.5%',
+    paddingVertical: 45,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f5f5f5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    position: 'relative',
+    
   },
-  gridImage: {
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    position: 'absolute', 
+    bottom: 5,
+  },
+  imageContainer: {
+    width: '100%',
+    height: height * 0.6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  image: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
   },
-  gridPlaceholder: {
-    width: '100%',
+  leftHalf: {
+    position: 'absolute',
+    width: '50%',
     height: '100%',
-    backgroundColor: '#e0e0e0',
+    left: 0,
+    zIndex: 2,
   },
-  infoContainer: {
-    alignItems: 'center',
-    marginTop: 20,
+  rightHalf: {
+    position: 'absolute',
+    width: '50%',
+    height: '100%',
+    right: 0,
+    zIndex: 2,
   },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  aboutMeContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: '#72bcd4',
+    borderRadius: 10,
+    padding: 20,
   },
-  age: {
-    fontSize: 18,
-    marginTop: 5,
-  },
-  aboutMe: {
+  aboutMeText: {
+    color: '#fff',
     fontSize: 16,
-    marginTop: 10,
-    textAlign: 'center',
-    paddingHorizontal: 10,
+  },
+  backButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 10,
+    padding: 10,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 24,
   },
 });
 

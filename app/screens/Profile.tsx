@@ -121,6 +121,7 @@ const Profile = ({ navigation }: RouterProps) => {
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
                 <Header navigation={navigation} />
                 <ProfileHeader profileImage={gridImages[0]} profileName={profileName} age={age} />
+                <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
                 <View style={styles.aboutMeContainer}>
                     <TextInput
                         style={styles.aboutMeInput}
@@ -133,7 +134,6 @@ const Profile = ({ navigation }: RouterProps) => {
                         <Text style={styles.saveButtonText}>Save</Text>
                     </TouchableOpacity>
                 </View>
-                <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
             </ScrollView>
             <NavigationTab navigation={navigation} />
         </KeyboardAvoidingView>
@@ -250,6 +250,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         textAlign: 'center',
         fontWeight: 'bold',
+        marginBottom: 20, // Increased spacing between name and grid
     },
     profileImage: {
         width: 100,
@@ -275,6 +276,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginVertical: 20,
         width: '90%', // Adjust the width to add padding to the screen edges
+        marginTop: 10, // Increased spacing between grid and input box
     },
     aboutMeInput: {
         width: '100%',
@@ -303,6 +305,8 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'center',
         padding: 10,
+        marginBottom: 20,
+        marginTop: 20, // Increased spacing between grid and input box
     },
     gridItem: {
         width: '30%',
@@ -356,4 +360,3 @@ const styles = StyleSheet.create({
 });
 
 export default Profile;
-
