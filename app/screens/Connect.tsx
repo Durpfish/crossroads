@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ImageBackground } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { collection, getDocs, setDoc, doc, query, where, getDoc, writeBatch } from 'firebase/firestore';
@@ -124,20 +124,22 @@ const Connect = ({ navigation }: ConnectProps) => {
     );
 
     return (
-        <View style={styles.container}>
-            {profiles.length > 0 ? (
-                renderProfile(profiles[currentIndex])
-            ) : (
-                <View style={styles.noUserContainer}>
-                    <Text style={styles.title}>It’s real quiet around this area!</Text>
-                    <Text style={styles.subtitle}>Why not sign up for some activities?</Text>
-                    <TouchableOpacity style={styles.navigateButton} onPress={navigateToEvents}>
-                        <Text style={styles.navigateButtonText}>Go to Events</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-            <NavigationTab navigation={navigation} />
-        </View>
+        <ImageBackground source={require('C:/Users/Calvin/Desktop/Orbital/crossroads/assets/orbital connect background.png')} style={styles.background}>
+            <View style={styles.container}>
+                {profiles.length > 0 ? (
+                    renderProfile(profiles[currentIndex])
+                ) : (
+                    <View style={styles.noUserContainer}>
+                        <Text style={styles.title}>It’s real quiet around this area!</Text>
+                        <Text style={styles.subtitle}>Why not sign up for some activities?</Text>
+                        <TouchableOpacity style={styles.navigateButton} onPress={navigateToEvents}>
+                            <Text style={styles.navigateButtonText}>Go to Events</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+                <NavigationTab navigation={navigation} />
+            </View>
+        </ImageBackground>
     );
 };
 
@@ -171,7 +173,11 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
+    },
+    background: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
     },
     userAvailableContainer: {
         justifyContent: 'center',
