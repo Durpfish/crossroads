@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ImageBackground } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
-import { collection, getDocs, setDoc, doc, query, where, getDoc, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, setDoc, doc, query, where, getDoc, writeBatch, GeoPoint } from 'firebase/firestore';
+import * as Location from 'expo-location';
+import { geohashForLocation, distanceBetween } from 'geofire-common';
 
 interface ConnectProps {
     navigation: NavigationProp<any, any>;
@@ -13,10 +15,35 @@ const Connect = ({ navigation }: ConnectProps) => {
     const [singleProfileData, setSingleProfileData] = useState<any[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [matchedUserIds, setMatchedUserIds] = useState<string[]>([]);
+    const [location, setLocation] = useState(null);
     const user = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
+        const fetchLocation = async () => {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                console.error('Permission to access location was denied');
+                return;
+            }
+
+            const location = await Location.getCurrentPositionAsync({});
+            setLocation(location);
+
+            // Update user location in Firestore
+            const geohash = geohashForLocation([location.coords.latitude, location.coords.longitude]);
+            await setDoc(doc(FIREBASE_FIRESTORE, 'profiles', user.uid), {
+                location: new GeoPoint(location.coords.latitude, location.coords.longitude),
+                geohash: geohash
+            }, { merge: true });
+        };
+
+        fetchLocation();
+    }, []);
+
+    useEffect(() => {
         const fetchProfiles = async () => {
+            if (!location) return;
+
             try {
                 const matchedUsersQuery = query(collection(FIREBASE_FIRESTORE, 'matches'), where('userId', '==', user.uid));
                 const matchedUsersSnapshot = await getDocs(matchedUsersQuery);
@@ -27,13 +54,27 @@ const Connect = ({ navigation }: ConnectProps) => {
                 const docRef = doc(FIREBASE_FIRESTORE, 'profiles', user.uid);
                 const docSnap = await getDoc(docRef);
                 const profilesData: any[] = [];
+
                 querySnapshot.forEach((doc) => {
                     const profileData = doc.data();
-                    if (profileData.userId !== user.uid && !matchedIds.includes(profileData.userId)) {
-                        profilesData.push({ id: doc.id, ...profileData });
+                    if (
+                        profileData.userId !== user.uid &&
+                        !matchedIds.includes(profileData.userId) &&
+                        profileData.location &&
+                        profileData.profileName && // Check if profile name exists
+                        profileData.profileImage // Check if profile image exists
+                    ) {
+                        const distance = distanceBetween(
+                            [location.coords.latitude, location.coords.longitude],
+                            [profileData.location.latitude, profileData.location.longitude]
+                        );
+                        if (distance <= 5) { // distance in km
+                            profilesData.push({ id: doc.id, ...profileData });
+                        }
                     }
                 });
-                setSingleProfileData(docSnap.data())
+
+                setSingleProfileData(docSnap.data());
                 setProfiles(profilesData);
             } catch (error) {
                 console.error('Error fetching profiles: ', error);
@@ -41,7 +82,7 @@ const Connect = ({ navigation }: ConnectProps) => {
         };
 
         fetchProfiles();
-    }, [user]);
+    }, [location, user]);
 
     const handleReject = () => {
         if (currentIndex < profiles.length - 1) {
@@ -236,7 +277,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
     },
     navigateButton: {
-        backgroundColor: '#007BFF',
+        backgroundColor: '#72bcd4',
         padding: 15,
         borderRadius: 5,
         marginTop: 20,
@@ -266,3 +307,4 @@ const styles = StyleSheet.create({
 });
 
 export default Connect;
+

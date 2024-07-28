@@ -54,6 +54,9 @@ const ProfileSummary = ({ navigation, route }: RouterProps) => {
   }
 
   const gridImages = [profile.profileImage, ...profile.gridImages].filter(Boolean);
+  const aboutMeText = profile.aboutMe
+    ? profile.aboutMe
+    : `${profile.profileName} has yet to update their profile`;
 
   return (
     <View style={styles.container}>
@@ -70,7 +73,7 @@ const ProfileSummary = ({ navigation, route }: RouterProps) => {
         )}
       </View>
       <View style={styles.aboutMeContainer}>
-        <Text style={styles.aboutMeText}>{profile.aboutMe}</Text>
+        <Text style={styles.aboutMeText}>{aboutMeText}</Text>
       </View>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Text style={styles.backButtonText}>←</Text>
@@ -95,12 +98,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     position: 'relative',
-    
   },
   headerText: {
     fontSize: 24,
     fontWeight: 'bold',
-    position: 'absolute', 
+    position: 'absolute',
     bottom: 5,
   },
   imageContainer: {

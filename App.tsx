@@ -1,7 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './app/screens/Login';
-// import Welcome from './app/screens/Welcome';
 import Home from './app/screens/Home';
 import NewsFeed from './app/screens/NewsFeed';
 import Events from './app/screens/Events';
@@ -18,7 +17,6 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { FIREBASE_APP, FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from './firebaseConfig';
 
-
 const Stack = createNativeStackNavigator();
 const InsideStack = createNativeStackNavigator();
 
@@ -29,11 +27,6 @@ function InsideLayout() {
         name="Home" 
         component={Home} 
         options={{ headerShown: false, animation: 'none' }}
-      />
-      <Stack.Screen 
-        name="Registration"
-        component={Registration}
-        options={{ headerShown: true, animation: 'none' }}
       />
       <InsideStack.Screen 
         name="NewsFeed" 
@@ -75,18 +68,16 @@ function InsideLayout() {
         component={ProfileSummary} 
         options={{ headerShown: true, animation: 'none' }}
       />
-      <Stack.Screen
+      <InsideStack.Screen 
         name="EditProfile" 
         component={EditProfile}
         options={{ headerShown: true, animation: 'none' }}
       />
-      <Stack.Screen name="CreatePost"
+      <InsideStack.Screen name="CreatePost"
        component={CreatePost} 
        options={{ headerShown: true, animation: 'none' }}
       />
     </InsideStack.Navigator>
-    
-    
   );
 }
 
@@ -116,8 +107,12 @@ export default function App() {
             options={{ headerShown: false, animation: 'none' }} 
           />
         )}
+        <Stack.Screen 
+          name="Registration"
+          component={Registration}
+          options={{ headerShown: true, animation: 'none' }}
+        />
       </Stack.Navigator>
-
     </NavigationContainer>
   );
 }
