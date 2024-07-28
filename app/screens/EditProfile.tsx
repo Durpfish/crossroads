@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         textAlign: 'center',
         fontWeight: 'bold',
-        marginBottom: 20, // Increased spacing between name and grid
+        marginBottom: 20,
     },
     profileImage: {
         width: 100,
@@ -222,8 +222,8 @@ const styles = StyleSheet.create({
     aboutMeContainer: {
         alignItems: 'center',
         marginVertical: 20,
-        width: '90%', // Adjust the width to add padding to the screen edges
-        marginTop: 10, // Increased spacing between grid and input box
+        width: '90%',
+        marginTop: 10, 
     },
     aboutMeInput: {
         width: '100%',
@@ -235,12 +235,12 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         textAlignVertical: 'top',
         backgroundColor: '#fff',
-        marginBottom: 10, // Add margin bottom to separate from save button
+        marginBottom: 10, 
     },
     saveButton: {
         backgroundColor: '#72bcd4',
-        paddingVertical: 8, // Reduce padding for smaller size
-        paddingHorizontal: 15, // Reduce padding for smaller size
+        paddingVertical: 8,
+        paddingHorizontal: 15,
         borderRadius: 8,
     },
     saveButtonText: {
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 10,
         marginBottom: 20,
-        marginTop: 20, // Increased spacing between grid and input box
+        marginTop: 20,
     },
     gridItem: {
         width: '30%',

@@ -165,7 +165,7 @@ const NavigationTab = ({ navigation }: NewsFeedProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
         { name: "Events", icon: "📅" },
-        { name: "Connect", icon: "🤝🏽" },
+        { name: "Connect", icon: "🌐" },
         { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
     ];

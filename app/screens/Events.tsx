@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Modal } from 'react-native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
 import { collection, addDoc, query, where, getDocs, Timestamp, doc, updateDoc, orderBy, limit, startAfter } from 'firebase/firestore';
@@ -12,17 +12,21 @@ const Events = ({ navigation }: RouterProps) => {
     const [events, setEvents] = useState<any[]>([]);
     const [title, setTitle] = useState('');
     const [maxParticipants, setMaxParticipants] = useState('');
+    const [location, setLocation] = useState('');
+    const [timing, setTiming] = useState('');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [lastVisible, setLastVisible] = useState<any>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState<any>(null);
+    const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
         fetchEvents();
     }, []);
 
     const handleListEvent = async () => {
-        if (title.trim() === '' || maxParticipants.trim() === '') {
-            setErrorMsg('Event title and Max participants are required');
+        if (title.trim() === '' || maxParticipants.trim() === '' || location.trim() === '' || timing.trim() === '') {
+            setErrorMsg('All fields are required');
             return;
         }
 
@@ -39,9 +43,13 @@ const Events = ({ navigation }: RouterProps) => {
                 currentParticipants: [],
                 timestamp: Timestamp.now(),
                 endTime: Timestamp.now().seconds + 12 * 60 * 60,
+                location: location,
+                timing: timing,
             });
             setTitle('');
             setMaxParticipants('');
+            setLocation('');
+            setTiming('');
             fetchEvents();
         } catch (error) {
             console.error("Error listing event:", error);
@@ -50,8 +58,8 @@ const Events = ({ navigation }: RouterProps) => {
 
     const fetchEvents = async (refresh = false) => {
         try {
-            if (refresh) setRefreshing(true); // Set refreshing to true before starting fetch
-    
+            if (refresh) setRefreshing(true);
+
             const now = Timestamp.now();
             let eventsQuery = query(
                 collection(FIREBASE_FIRESTORE, 'events'),
@@ -59,29 +67,28 @@ const Events = ({ navigation }: RouterProps) => {
                 orderBy('endTime'),
                 limit(10)
             );
-    
+
             if (!refresh && lastVisible) {
                 eventsQuery = query(eventsQuery, startAfter(lastVisible));
             }
-    
+
             const querySnapshot = await getDocs(eventsQuery);
             const eventsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
+
             if (refresh) {
-                setEvents(eventsData); // Replace events array on refresh
+                setEvents(eventsData);
             } else {
                 setEvents(prevEvents => {
-                    // Filter out any duplicate events by checking IDs
                     const newEvents = eventsData.filter(newEvent => !prevEvents.find(oldEvent => oldEvent.id === newEvent.id));
                     return [...prevEvents, ...newEvents];
                 });
             }
-    
+
             setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
         } catch (error) {
             console.error("Error fetching events:", error);
         } finally {
-            setRefreshing(false); // Set refreshing to false after fetch completes
+            setRefreshing(false);
         }
     };
 
@@ -96,7 +103,7 @@ const Events = ({ navigation }: RouterProps) => {
                             currentParticipants: [...currentParticipants, userId],
                         });
                         alert('Successfully joined the event!');
-                        fetchEvents(true); 
+                        fetchEvents(true);
                     } catch (error) {
                         console.error("Error joining event:", error);
                     }
@@ -110,7 +117,7 @@ const Events = ({ navigation }: RouterProps) => {
                         currentParticipants: updatedParticipants,
                     });
                     alert('Successfully left the event.');
-                    fetchEvents(true); 
+                    fetchEvents(true);
                 } catch (error) {
                     console.error("Error leaving event:", error);
                 }
@@ -132,15 +139,17 @@ const Events = ({ navigation }: RouterProps) => {
     };
 
     const renderEventItem = ({ item }: { item: any }) => (
-        <View style={styles.eventContainer}>
-            <Text style={styles.eventTitle}>{item.title}</Text>
-            <Text style={styles.eventDetails}>
-                {calculateRemainingTime(item.endTime)} | Participants: {item.currentParticipants.length}/{item.maxParticipants}
-            </Text>
-            <TouchableOpacity onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={[styles.joinButton, { backgroundColor: isUserJoined(item.currentParticipants) ? 'red' : '#78b075' }]}>
-                <Text style={styles.joinButtonText}>{isUserJoined(item.currentParticipants) ? 'Leave' : 'Join'}</Text>
-            </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={() => { setSelectedEvent(item); setModalVisible(true); }}>
+            <View style={styles.eventContainer}>
+                <Text style={styles.eventTitle}>{item.title}</Text>
+                <Text style={styles.eventDetails}>
+                    {calculateRemainingTime(item.endTime)} | Participants: {item.currentParticipants.length}/{item.maxParticipants}
+                </Text>
+                <TouchableOpacity onPress={() => handleJoinEvent(item.id, item.currentParticipants)} style={[styles.joinButton, { backgroundColor: isUserJoined(item.currentParticipants) ? 'red' : '#78b075' }]}>
+                    <Text style={styles.joinButtonText}>{isUserJoined(item.currentParticipants) ? 'Leave' : 'Join'}</Text>
+                </TouchableOpacity>
+            </View>
+        </TouchableOpacity>
     );
 
     const handleRefresh = () => {
@@ -169,6 +178,18 @@ const Events = ({ navigation }: RouterProps) => {
                     onChangeText={setMaxParticipants}
                     keyboardType="numeric"
                 />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Location"
+                    value={location}
+                    onChangeText={setLocation}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Timing"
+                    value={timing}
+                    onChangeText={setTiming}
+                />
                 {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
                 <TouchableOpacity onPress={handleListEvent} style={styles.listEventButton}>
                     <Text style={styles.listEventButtonText}>List Event</Text>
@@ -184,6 +205,38 @@ const Events = ({ navigation }: RouterProps) => {
             <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
                 <Text style={styles.refreshButtonText}>Refresh</Text>
             </TouchableOpacity>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => {
+                    setModalVisible(!modalVisible);
+                }}
+            >
+                <View style={styles.modalView}>
+                    {selectedEvent && (
+                        <>
+                            <Text style={styles.modalTitle}>{selectedEvent.title}</Text>
+                            <Text style={styles.modalDetails}>Location: {selectedEvent.location}</Text>
+                            <Text style={styles.modalDetails}>Timing: {selectedEvent.timing}</Text>
+                            <Text style={styles.modalDetails}>Participants: {selectedEvent.currentParticipants.length}/{selectedEvent.maxParticipants}</Text>
+                            <Text style={styles.modalDetails}>{calculateRemainingTime(selectedEvent.endTime)}</Text>
+                            <TouchableOpacity
+                                style={[styles.joinButton, { backgroundColor: isUserJoined(selectedEvent.currentParticipants) ? 'red' : '#78b075' }]}
+                                onPress={() => handleJoinEvent(selectedEvent.id, selectedEvent.currentParticipants)}
+                            >
+                                <Text style={styles.joinButtonText}>{isUserJoined(selectedEvent.currentParticipants) ? 'Leave' : 'Join'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.button, styles.buttonClose]}
+                                onPress={() => setModalVisible(!modalVisible)}
+                            >
+                                <Text style={styles.textStyle}>Close</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </View>
+            </Modal>
             <NavigationTab navigation={navigation} />
         </View>
     );
@@ -200,7 +253,7 @@ const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
         { name: "Events", icon: "📅" },
-        { name: "Connect", icon: "🤝🏽" },
+        { name: "Connect", icon: "🌐" },
         { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
     ];
@@ -242,7 +295,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginVertical: 20,
+        marginVertical: 5,
     },
     formContainer: {
         width: '100%',
@@ -251,7 +304,7 @@ const styles = StyleSheet.create({
     },
     input: {
         width: '100%',
-        height: 40,
+        height: 30,
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 5,
@@ -264,7 +317,7 @@ const styles = StyleSheet.create({
     },
     listEventButton: {
         backgroundColor: '#72bcd4',
-        paddingVertical: 10,
+        paddingVertical: 7,
         paddingHorizontal: 20,
         borderRadius: 5,
         marginTop: 10,
@@ -296,8 +349,8 @@ const styles = StyleSheet.create({
         marginTop: 5,
     },
     joinButton: {
-        paddingVertical: 5,
-        paddingHorizontal: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
         borderRadius: 5,
     },
     joinButtonText: {
@@ -338,6 +391,44 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        padding: 35,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    button: {
+        borderRadius: 10,
+        padding: 10,
+        elevation: 2,
+    },
+    buttonClose: {
+        backgroundColor: '#72bcd4',
+    },
+    textStyle: {
+        color: 'white',
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    modalDetails: {
+        fontSize: 18,
+        marginBottom: 10,
     },
 });
 

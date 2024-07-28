@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ImageBackground } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
@@ -35,37 +35,39 @@ const Profile = ({ navigation }: RouterProps) => {
     const profileImage = gridImages[0];
 
     return (
-        <View style={styles.container}>
-            <View style={styles.profileContainer}>
-                {profileImage ? (
-                    <Image source={{ uri: profileImage }} style={styles.profileImage} />
-                ) : (
-                    <View style={styles.placeholderImage}>
-                        <Text style={styles.placeholderText}>No Image</Text>
-                    </View>
-                )}
-                <Text style={styles.profileText}>{`${profileName}, ${age}`}</Text>
+        <ImageBackground source={require('C:/Users/Calvin/Desktop/Orbital/crossroads/assets/profile-bg.png')} style={styles.background}>
+            <View style={styles.container}>
+                <View style={styles.profileContainer}>
+                    {profileImage ? (
+                        <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                    ) : (
+                        <View style={styles.placeholderImage}>
+                            <Text style={styles.placeholderText}>No Image</Text>
+                        </View>
+                    )}
+                    <Text style={styles.profileText}>{`${profileName}, ${age}`}</Text>
+                </View>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('EditProfile')}
+                >
+                    <Text style={styles.buttonText}>Edit Profile</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('CreatePost')}
+                >
+                    <Text style={styles.buttonText}>New Post</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('Settings')}
+                >
+                    <Text style={styles.buttonText}>Settings</Text>
+                </TouchableOpacity>
+                <NavigationTab navigation={navigation} />
             </View>
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.navigate('EditProfile')}
-            >
-                <Text style={styles.buttonText}>Edit Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.navigate('CreatePost')}
-            >
-                <Text style={styles.buttonText}>Create Post</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.navigate('Settings')}
-            >
-                <Text style={styles.buttonText}>Settings</Text>
-            </TouchableOpacity>
-            <NavigationTab navigation={navigation} />
-        </View>
+        </ImageBackground>
     );
 };
 
@@ -73,7 +75,7 @@ const NavigationTab = ({ navigation }: RouterProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
         { name: "Events", icon: "📅" },
-        { name: "Connect", icon: "🤝🏽" },
+        { name: "Connect", icon: "🌐" },
         { name: "Matches", icon: "❤️" },
         { name: "Profile", icon: "👤" },
     ];
@@ -95,6 +97,10 @@ const NavigationTab = ({ navigation }: RouterProps) => {
 };
 
 const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+        resizeMode: 'cover',
+    },
     container: {
         flex: 1,
         justifyContent: 'center',
