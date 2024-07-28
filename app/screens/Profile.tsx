@@ -1,11 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from '../../firebaseConfig';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface RouterProps {
     navigation: NavigationProp<any, any>;
@@ -15,7 +12,6 @@ const Profile = ({ navigation }: RouterProps) => {
     const [gridImages, setGridImages] = useState<string[]>(Array(6).fill(null));
     const [profileName, setProfileName] = useState<string>('');
     const [age, setAge] = useState<string>('');
-    const [aboutMe, setAboutMe] = useState<string>('');
     const user = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
@@ -29,7 +25,6 @@ const Profile = ({ navigation }: RouterProps) => {
                     setGridImages(profileData.gridImages || Array(6).fill(null));
                     setProfileName(profileData.profileName || '');
                     setAge(profileData.age || '');
-                    setAboutMe(profileData.aboutMe || '');
                 }
             }
         };
@@ -37,152 +32,39 @@ const Profile = ({ navigation }: RouterProps) => {
         loadProfileData();
     }, [user]);
 
-    const handleImageUpload = async (index: number) => {
-        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (permissionResult.granted === false) {
-            alert("Permission to access camera roll is required!");
-            return;
-        }
-
-        const pickerResult = await ImagePicker.launchImageLibraryAsync();
-        if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
-            const imageUri = pickerResult.assets[0].uri;
-            const uploadUrl = await uploadImageAsync(imageUri);
-
-            if (user) {
-                setGridImages(prevGridImages => {
-                    const newGridImages = [...prevGridImages];
-                    newGridImages[index] = uploadUrl;
-                    AsyncStorage.setItem(`${user.uid}_gridImages`, JSON.stringify(newGridImages));
-                    return newGridImages;
-                });
-                saveProfileToFirestore(user.uid, gridImages, profileName, age, aboutMe);
-            }
-        }
-    };
-
-    const uploadImageAsync = async (uri) => {
-        const blob = await new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.onload = function () {
-                resolve(xhr.response);
-            };
-            xhr.onerror = function () {
-                reject(new TypeError('Network request failed'));
-            };
-            xhr.responseType = 'blob';
-            xhr.open('GET', uri, true);
-            xhr.send(null);
-        });
-
-        const fileRef = ref(FIREBASE_STORAGE, `images/${user.uid}/${Date.now()}`);
-        await uploadBytes(fileRef, blob);
-
-        blob.close();
-
-        return await getDownloadURL(fileRef);
-    };
-
-    const saveProfileToFirestore = async (userId, gridImages, profileName, age, aboutMe) => {
-        try {
-            await setDoc(doc(FIREBASE_FIRESTORE, 'profiles', userId), {
-                userId,
-                gridImages,
-                profileName,
-                age,
-                aboutMe,
-                createdAt: new Date(),
-            });
-            console.log('Profile saved to Firestore');
-        } catch (error) {
-            console.error('Error saving profile to Firestore: ', error);
-        }
-    };
-
-    const handleSaveAboutMe = async () => {
-        if (user) {
-            try {
-                const docRef = doc(FIREBASE_FIRESTORE, 'profiles', user.uid);
-                await updateDoc(docRef, {
-                    aboutMe,
-                });
-                console.log('About Me saved to Firestore');
-            } catch (error) {
-                console.error('Error saving About Me to Firestore: ', error);
-            }
-        }
-    };
+    const profileImage = gridImages[0];
 
     return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                <Header navigation={navigation} />
-                <ProfileHeader profileImage={gridImages[0]} profileName={profileName} age={age} />
-                <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
-                <View style={styles.aboutMeContainer}>
-                    <TextInput
-                        style={styles.aboutMeInput}
-                        placeholder="Tell us about yourself..."
-                        value={aboutMe}
-                        onChangeText={setAboutMe}
-                        multiline={true}
-                    />
-                    <TouchableOpacity onPress={handleSaveAboutMe} style={styles.saveButton}>
-                        <Text style={styles.saveButtonText}>Save</Text>
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
-            <NavigationTab navigation={navigation} />
-        </KeyboardAvoidingView>
-    );
-};
-
-const Header = ({ navigation }: { navigation: NavigationProp<any, any> }) => {
-    const navigateToSettings = () => {
-        navigation.navigate('Settings');
-    };
-
-    return (
-        <View style={styles.headerContainer}>
-            <TouchableOpacity onPress={navigateToSettings} style={styles.settingsIcon}>
-                <Text style={styles.tabIcon}>{"⚙️"}</Text>
+        <View style={styles.container}>
+            <View style={styles.profileContainer}>
+                {profileImage ? (
+                    <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                ) : (
+                    <View style={styles.placeholderImage}>
+                        <Text style={styles.placeholderText}>No Image</Text>
+                    </View>
+                )}
+                <Text style={styles.profileText}>{`${profileName}, ${age}`}</Text>
+            </View>
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => navigation.navigate('EditProfile')}
+            >
+                <Text style={styles.buttonText}>Edit Profile</Text>
             </TouchableOpacity>
-        </View>
-    );
-};
-
-const ProfileHeader = ({ profileImage, profileName, age }: { profileImage: string | null, profileName: string, age: string }) => {
-    return (
-        <View style={styles.profileContainer}>
-            {profileImage ? (
-                <Image source={{ uri: profileImage }} style={styles.profileImage} />
-            ) : (
-                <View style={styles.placeholderImage}>
-                    <Text style={styles.placeholderText}>No Image</Text>
-                </View>
-            )}
-            <Text style={styles.profileText}>{`${profileName}, ${age}`}</Text>
-        </View>
-    );
-};
-
-const ImageGrid = ({ gridImages, handleImageUpload }: { gridImages: string[], handleImageUpload: (index: number) => void }) => {
-    return (
-        <View style={styles.gridContainer}>
-            {gridImages.slice(0, 6).map((imageUri, index) => (
-                <TouchableOpacity key={index} onPress={() => handleImageUpload(index)} style={styles.gridItem}>
-                    {imageUri ? (
-                        <Image source={{ uri: imageUri }} style={styles.gridImage} />
-                    ) : (
-                        <View style={styles.gridPlaceholder}>
-                            <Text style={styles.gridPlaceholderText}>+</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => navigation.navigate('CreatePost')}
+            >
+                <Text style={styles.buttonText}>Create Post</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => navigation.navigate('Settings')}
+            >
+                <Text style={styles.buttonText}>Settings</Text>
+            </TouchableOpacity>
+            <NavigationTab navigation={navigation} />
         </View>
     );
 };
@@ -215,42 +97,13 @@ const NavigationTab = ({ navigation }: RouterProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    scrollViewContent: {
-        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingTop: 80,
     },
-    headerContainer: {
-        position: 'absolute',
-        top: 0,
-        width: '100%',
-        backgroundColor: '#72bcd4',
-        paddingVertical: 25,
-        alignItems: 'center',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 10,
-        zIndex:2,
-    },
     profileContainer: {
-        marginTop: -110,
-        width: '100%',
-        paddingVertical: 10,
-        justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f5f5f5',
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-        zIndex: 1,
-    },
-    profileText: {
-        color: 'black',
-        fontSize: 24,
-        textAlign: 'center',
-        fontWeight: 'bold',
-        marginBottom: 20, // Increased spacing between name and grid
+        marginBottom: 20,
     },
     profileImage: {
         width: 100,
@@ -272,65 +125,20 @@ const styles = StyleSheet.create({
         color: '#757575',
         fontSize: 16,
     },
-    aboutMeContainer: {
-        alignItems: 'center',
-        marginVertical: 20,
-        width: '90%', // Adjust the width to add padding to the screen edges
-        marginTop: 10, // Increased spacing between grid and input box
-    },
-    aboutMeInput: {
-        width: '100%',
-        height: 100,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        textAlignVertical: 'top',
-        backgroundColor: '#fff',
-        marginBottom: 10, // Add margin bottom to separate from save button
-    },
-    saveButton: {
-        backgroundColor: '#72bcd4',
-        paddingVertical: 8, // Reduce padding for smaller size
-        paddingHorizontal: 15, // Reduce padding for smaller size
-        borderRadius: 8,
-    },
-    saveButtonText: {
-        color: '#fff',
+    profileText: {
+        fontSize: 24,
         fontWeight: 'bold',
     },
-    gridContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        padding: 10,
-        marginBottom: 20,
-        marginTop: 20, // Increased spacing between grid and input box
+    button: {
+        backgroundColor: '#72bcd4',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        marginTop: 10,
     },
-    gridItem: {
-        width: '30%',
-        aspectRatio: 1,
-        margin: '1.5%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-    },
-    gridImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'cover',
-    },
-    gridPlaceholder: {
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#e0e0e0',
-    },
-    gridPlaceholderText: {
-        fontSize: 24,
-        color: '#757575',
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
     },
     navigationTabContainer: {
         position: 'absolute',
@@ -349,13 +157,6 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 12,
-    },
-    settingsIcon: {
-        position: 'absolute',
-        right: 10,
-        top: 100,
-        padding: 10,
-        zIndex: 1,
     },
 });
 

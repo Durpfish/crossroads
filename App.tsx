@@ -12,6 +12,8 @@ import Settings from './app/screens/Settings';
 import Message from './app/screens/Message';
 import ProfileSummary from './app/screens/ProfileSummary';
 import Registration from './app/screens/Registration';
+import EditProfile from './app/screens/EditProfile';
+import CreatePost from './app/screens/CreatePost';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { FIREBASE_APP, FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from './firebaseConfig';
@@ -27,6 +29,11 @@ function InsideLayout() {
         name="Home" 
         component={Home} 
         options={{ headerShown: false, animation: 'none' }}
+      />
+      <Stack.Screen 
+        name="Registration"
+        component={Registration}
+        options={{ headerShown: true, animation: 'none' }}
       />
       <InsideStack.Screen 
         name="NewsFeed" 
@@ -68,12 +75,17 @@ function InsideLayout() {
         component={ProfileSummary} 
         options={{ headerShown: true, animation: 'none' }}
       />
-      <Stack.Screen 
-        name="Registration"
-        component={Registration}
+      <Stack.Screen
+        name="EditProfile" 
+        component={EditProfile}
         options={{ headerShown: true, animation: 'none' }}
       />
+      <Stack.Screen name="CreatePost"
+       component={CreatePost} 
+       options={{ headerShown: true, animation: 'none' }}
+      />
     </InsideStack.Navigator>
+    
     
   );
 }

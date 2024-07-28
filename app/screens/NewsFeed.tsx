@@ -1,110 +1,161 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from '../../firebaseConfig';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
-import { collection, query, where, onSnapshot, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from '../../firebaseConfig';
+import moment from 'moment';
 
-interface RouterProps {
+interface NewsFeedProps {
     navigation: NavigationProp<any, any>;
 }
 
-interface UserImage {
-    id: string;
-    image: string;
-    profileName: string;
-    profileImage: string; // Added profileImage field
-}
-
-const NewsFeed = ({ navigation }: RouterProps) => {
-    const [userImages, setUserImages] = useState<UserImage[]>([]);
-    const [loading, setLoading] = useState(true);
+const NewsFeed = ({ navigation }: NewsFeedProps) => {
+    const [posts, setPosts] = useState<any[]>([]);
     const user = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
-        if (user) {
-            const q = query(collection(FIREBASE_FIRESTORE, 'matches'), where('userId', '==', user.uid));
-            const unsubscribe = onSnapshot(q, async (querySnapshot) => {
-                const imagesData: UserImage[] = [];
-                for (const matchDoc of querySnapshot.docs) {
-                    const matchData = matchDoc.data();
-                    const matchedUserId = matchData.matchedUserId;
-                    const profileDoc = await getDoc(doc(FIREBASE_FIRESTORE, 'profiles', matchedUserId));
-                    if (profileDoc.exists()) {
-                        const profileData = profileDoc.data();
-                        const gridImages = profileData.gridImages || [];
-                        const profileImage = profileData.profileImage || ''; // Get profile image
-                        const profileName = profileData.profileName || 'Unknown'; // Get profile name
-                        
-                        if (gridImages.length > 0) { // Only include if there are images
-                            gridImages.forEach((image: string, index: number) => {
-                                imagesData.push({
-                                    id: `${matchedUserId}-${index}`, // Combine userId and index for unique key
-                                    image: image,
-                                    profileImage: profileImage, // Include profile image
-                                    profileName: profileName
-                                });
-                            });
-                        }
-                    }
-                }
-                setUserImages(imagesData);
-                setLoading(false);
-            }, (error) => {
-                console.error('Error fetching matched user images: ', error);
-                setLoading(false);
-            });
+        const fetchPosts = async () => {
+            if (!user) return;
 
-            return () => unsubscribe();
-        }
+            // Fetch matches
+            const matchesQuery = query(collection(FIREBASE_FIRESTORE, 'matches'), where('userId', '==', user.uid));
+            const matchesSnapshot = await getDocs(matchesQuery);
+            const matchIds = matchesSnapshot.docs.map(doc => doc.data().matchedUserId);
+
+            // Fetch posts from the user and their matches
+            const postsQuery = query(collection(FIREBASE_FIRESTORE, 'posts'), where('userId', 'in', [user.uid, ...matchIds]));
+            const postsSnapshot = await getDocs(postsQuery);
+            const postsData = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            setPosts(postsData);
+        };
+
+        fetchPosts();
     }, [user]);
 
-    const renderImage = ({ item }: { item: UserImage }) => (
-    <View style={styles.imageContainer}>
-        <View style={styles.profileContainer}>
-            <Image source={{ uri: item.profileImage }} style={styles.profileImage} />
-            <View style={styles.profileTextContainer}>
-                <Text style={styles.profileName}>{item.profileName}</Text>
+    const renderPost = (item) => (
+        <View key={item.id} style={styles.postContainer}>
+            <View style={styles.postHeader}>
+                <Image source={{ uri: item.posterProfileImage }} style={styles.posterProfileImage} />
+                <Text style={styles.posterName}>{item.posterName}</Text>
+            </View>
+            <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+            <View style={styles.postCaptionContainer}>
+                <Text style={styles.postCaption}>{item.caption}</Text>
+                <Text style={styles.postDate}>{moment(item.createdAt.toDate()).fromNow()}</Text>
             </View>
         </View>
-        <Image
-            source={{ uri: item.image }}
-            style={styles.image}
-            onError={() => {/* Handle image load error */}}
-        />
-    </View>
-);
+    );
 
     return (
-        <View style={styles.container}>
-            <Header />
-            <View style={styles.contentContainer}>
-                <Text style={styles.heading}>News Feed</Text>
-                {loading ? (
-                    <Text>Loading...</Text>
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView contentContainerStyle={styles.container}>
+                <View style={styles.headerContainer}>
+                    <Text style={styles.headerText}>News Feed</Text>
+                </View>
+                {posts.length > 0 ? (
+                    posts.map(renderPost)
                 ) : (
-                    <FlatList
-                        data={userImages}
-                        renderItem={renderImage}
-                        keyExtractor={(item) => item.id} // Use the unique key
-                        style={styles.flatList}
-                    />
+                    <View style={styles.noPostsContainer}>
+                        <Text style={styles.noPostsText}>It’s pretty quiet here, why not join some events?</Text>
+                    </View>
                 )}
-            </View>
-
-            {/* Navigation Tab */}
+            </ScrollView>
             <NavigationTab navigation={navigation} />
-        </View>
+        </SafeAreaView>
     );
 };
 
-const Header = () => {
-    return (
-        <View style={styles.headerContainer}>
-        </View>
-    );
-};
+const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    headerContainer: {
+        width: '100%',
+        backgroundColor: '#72bcd4',
+        paddingVertical: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerText: {
+        color: 'white',
+        fontSize: 24,
+    },
+    container: {
+        padding: 10,
+        paddingTop: StatusBar.currentHeight || 20, // Padding to avoid the status bar overlap
+    },
+    postContainer: {
+        marginBottom: 20,
+    },
+    postHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    posterProfileImage: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        marginRight: 10,
+    },
+    posterName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    postImage: {
+        width: '100%',
+        height: 400, // Adjusted height to display full image
+        resizeMode: 'cover',
+        borderRadius: 10,
+    },
+    postCaptionContainer: {
+        marginTop: 10,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 8,
+        padding: 10,
+    },
+    postCaption: {
+        fontSize: 16,
+        color: '#333',
+    },
+    postDate: {
+        fontSize: 12,
+        color: '#777',
+        marginTop: 5,
+    },
+    noPostsContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    noPostsText: {
+        fontSize: 18,
+        color: '#757575',
+        textAlign: 'center',
+    },
+    navigationTabContainer: {
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        backgroundColor: '#ddd',
+        paddingVertical: 10,
+    },
+    tabButton: {
+        alignItems: 'center',
+    },
+    tabIcon: {
+        fontSize: 24,
+    },
+    tabText: {
+        fontSize: 12,
+    },
+});
 
-const NavigationTab = ({ navigation }: RouterProps) => {
+const NavigationTab = ({ navigation }: NewsFeedProps) => {
     const tabs = [
         { name: "Home", icon: "🏠" },
         { name: "Events", icon: "📅" },
@@ -128,87 +179,5 @@ const NavigationTab = ({ navigation }: RouterProps) => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    headerContainer: {
-        position: 'absolute',
-        top: 0,
-        width: '100%',
-        backgroundColor: '#72bcd4',
-        paddingVertical: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerText: {
-        color: 'white',
-        fontSize: 24,
-    },
-    contentContainer: {
-        flex: 1,
-        width: '100%',
-        alignItems: 'center',
-        paddingTop: 80, 
-    },
-    heading: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        textAlign: 'center',
-    },
-    flatList: {
-        width: '100%',
-    },
-    imageContainer: {
-        marginBottom: 20,
-        alignItems: 'center',
-    },
-    profileContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-        width: '90%',
-    },
-    profileImage: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginRight: 10,
-    },
-    profileTextContainer: {
-        flexDirection: 'column',
-    },
-    profileName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: 'black',
-    },
-    image: {
-        width: '90%',
-        height: 300,
-        resizeMode: 'cover',
-        borderRadius: 10,
-    },
-    navigationTabContainer: {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: '#ddd',
-        paddingVertical: 10,
-    },
-    tabButton: {
-        alignItems: 'center',
-    },
-    tabIcon: {
-        fontSize: 24,
-    },
-    tabText: {
-        fontSize: 12,
-    },
-});
 
 export default NewsFeed;

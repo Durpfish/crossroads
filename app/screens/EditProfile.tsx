@@ -119,7 +119,6 @@ const EditProfile = ({ navigation }: RouterProps) => {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                <Header navigation={navigation} />
                 <ProfileHeader profileImage={gridImages[0]} profileName={profileName} age={age} />
                 <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
                 <View style={styles.aboutMeContainer}>
@@ -135,22 +134,7 @@ const EditProfile = ({ navigation }: RouterProps) => {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
-            <NavigationTab navigation={navigation} />
         </KeyboardAvoidingView>
-    );
-};
-
-const Header = ({ navigation }: { navigation: NavigationProp<any, any> }) => {
-    const navigateToSettings = () => {
-        navigation.navigate('Settings');
-    };
-
-    return (
-        <View style={styles.headerContainer}>
-            <TouchableOpacity onPress={navigateToSettings} style={styles.settingsIcon}>
-                <Text style={styles.tabIcon}>{"⚙️"}</Text>
-            </TouchableOpacity>
-        </View>
     );
 };
 
@@ -187,31 +171,6 @@ const ImageGrid = ({ gridImages, handleImageUpload }: { gridImages: string[], ha
     );
 };
 
-const NavigationTab = ({ navigation }: RouterProps) => {
-    const tabs = [
-        { name: "Home", icon: "🏠" },
-        { name: "Events", icon: "📅" },
-        { name: "Connect", icon: "🤝🏽" },
-        { name: "Matches", icon: "❤️" },
-        { name: "Profile", icon: "👤" },
-    ];
-
-    return (
-        <View style={styles.navigationTabContainer}>
-            {tabs.map((tab, index) => (
-                <TouchableOpacity
-                    key={index}
-                    style={styles.tabButton}
-                    onPress={() => navigation.navigate(tab.name)}
-                >
-                    <Text style={styles.tabIcon}>{tab.icon}</Text>
-                    <Text style={styles.tabText}>{tab.name}</Text>
-                </TouchableOpacity>
-            ))}
-        </View>
-    );
-};
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -221,18 +180,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingTop: 80,
-    },
-    headerContainer: {
-        position: 'absolute',
-        top: 0,
-        width: '100%',
-        backgroundColor: '#72bcd4',
-        paddingVertical: 25,
-        alignItems: 'center',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 10,
-        zIndex: 2,
     },
     profileContainer: {
         marginTop: -110,
@@ -250,7 +197,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         textAlign: 'center',
         fontWeight: 'bold',
-        marginBottom: 20,
+        marginBottom: 20, // Increased spacing between name and grid
     },
     profileImage: {
         width: 100,
@@ -275,8 +222,8 @@ const styles = StyleSheet.create({
     aboutMeContainer: {
         alignItems: 'center',
         marginVertical: 20,
-        width: '90%',
-        marginTop: 10,
+        width: '90%', // Adjust the width to add padding to the screen edges
+        marginTop: 10, // Increased spacing between grid and input box
     },
     aboutMeInput: {
         width: '100%',
@@ -288,12 +235,12 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         textAlignVertical: 'top',
         backgroundColor: '#fff',
-        marginBottom: 10,
+        marginBottom: 10, // Add margin bottom to separate from save button
     },
     saveButton: {
         backgroundColor: '#72bcd4',
-        paddingVertical: 8,
-        paddingHorizontal: 15,
+        paddingVertical: 8, // Reduce padding for smaller size
+        paddingHorizontal: 15, // Reduce padding for smaller size
         borderRadius: 8,
     },
     saveButtonText: {
@@ -306,7 +253,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 10,
         marginBottom: 20,
-        marginTop: 20,
+        marginTop: 20, // Increased spacing between grid and input box
     },
     gridItem: {
         width: '30%',
@@ -331,31 +278,6 @@ const styles = StyleSheet.create({
     gridPlaceholderText: {
         fontSize: 24,
         color: '#757575',
-    },
-    navigationTabContainer: {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: '#ddd',
-        paddingVertical: 10,
-    },
-    tabButton: {
-        alignItems: 'center',
-    },
-    tabIcon: {
-        fontSize: 24,
-    },
-    tabText: {
-        fontSize: 12,
-    },
-    settingsIcon: {
-        position: 'absolute',
-        right: 10,
-        top: 100,
-        padding: 10,
-        zIndex: 1,
     },
 });
 
