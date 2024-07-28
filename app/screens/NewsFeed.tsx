@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { NavigationProp } from '@react-navigation/native';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from '../../firebaseConfig';
 import moment from 'moment';
 
@@ -16,25 +16,29 @@ const NewsFeed = ({ navigation }: NewsFeedProps) => {
     useEffect(() => {
         const fetchPosts = async () => {
             if (!user) return;
-
+    
             // Fetch matches
             const matchesQuery = query(collection(FIREBASE_FIRESTORE, 'matches'), where('userId', '==', user.uid));
             const matchesSnapshot = await getDocs(matchesQuery);
             const matchIds = matchesSnapshot.docs.map(doc => doc.data().matchedUserId);
-
+    
             // Fetch posts from the user and their matches
-            const postsQuery = query(collection(FIREBASE_FIRESTORE, 'posts'), where('userId', 'in', [user.uid, ...matchIds]));
+            const postsQuery = query(
+                collection(FIREBASE_FIRESTORE, 'posts'),
+                where('userId', 'in', [user.uid, ...matchIds]),
+                orderBy('createdAt', 'desc')
+            );
             const postsSnapshot = await getDocs(postsQuery);
             const postsData = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
+    
             setPosts(postsData);
         };
-
+    
         fetchPosts();
     }, [user]);
 
-    const renderPost = (item) => (
-        <View key={item.id} style={styles.postContainer}>
+    const renderItem = ({ item }) => (
+        <View style={styles.postContainer}>
             <View style={styles.postHeader}>
                 <Image source={{ uri: item.posterProfileImage }} style={styles.posterProfileImage} />
                 <Text style={styles.posterName}>{item.posterName}</Text>
@@ -49,18 +53,20 @@ const NewsFeed = ({ navigation }: NewsFeedProps) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <ScrollView contentContainerStyle={styles.container}>
-                <View style={styles.headerContainer}>
-                    <Text style={styles.headerText}>News Feed</Text>
-                </View>
-                {posts.length > 0 ? (
-                    posts.map(renderPost)
-                ) : (
+            <View style={styles.headerContainer}>
+                <Text style={styles.headerText}>News Feed</Text>
+            </View>
+            <FlatList
+                data={posts}
+                keyExtractor={item => item.id}
+                renderItem={renderItem}
+                contentContainerStyle={styles.contentContainer}
+                ListEmptyComponent={() => (
                     <View style={styles.noPostsContainer}>
                         <Text style={styles.noPostsText}>It’s pretty quiet here, why not join some events?</Text>
                     </View>
                 )}
-            </ScrollView>
+            />
             <NavigationTab navigation={navigation} />
         </SafeAreaView>
     );
@@ -82,9 +88,9 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 24,
     },
-    container: {
+    contentContainer: {
         padding: 10,
-        paddingTop: StatusBar.currentHeight || 20, // Padding to avoid the status bar overlap
+        paddingBottom: 80, // Added padding to avoid overlap with navigation bar
     },
     postContainer: {
         marginBottom: 20,
@@ -181,3 +187,4 @@ const NavigationTab = ({ navigation }: NewsFeedProps) => {
 };
 
 export default NewsFeed;
+

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -77,30 +77,31 @@ const CreatePost = ({ navigation }: RouterProps) => {
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
+            <TouchableOpacity style={styles.imageUploadButton} onPress={handleImageUpload}>
+                <Text style={styles.imageUploadButtonText}>Upload Image</Text>
+            </TouchableOpacity>
+            {postImage && <Image source={{ uri: postImage }} style={styles.postImage} />}
             <TextInput
                 style={styles.captionInput}
                 placeholder="Write a caption..."
                 value={caption}
                 onChangeText={setCaption}
             />
-            <TouchableOpacity style={styles.imageUploadButton} onPress={handleImageUpload}>
-                <Text style={styles.imageUploadButtonText}>Upload Image</Text>
-            </TouchableOpacity>
-            {postImage && <Image source={{ uri: postImage }} style={styles.postImage} />}
             <TouchableOpacity style={styles.createPostButton} onPress={handleCreatePost}>
-                <Text style={styles.createPostButtonText}>Create Post</Text>
+                <Text style={styles.createPostButtonText}>Share</Text>
             </TouchableOpacity>
-        </View>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+        backgroundColor: '#f5f5f5',
     },
     captionInput: {
         width: '100%',
@@ -112,14 +113,14 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         textAlignVertical: 'top',
         backgroundColor: '#fff',
-        marginBottom: 10,
+        marginBottom: 20,
     },
     imageUploadButton: {
         backgroundColor: '#72bcd4',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,
-        marginTop: 10,
+        marginBottom: 20,
     },
     imageUploadButtonText: {
         color: '#fff',
@@ -127,16 +128,16 @@ const styles = StyleSheet.create({
     },
     postImage: {
         width: '100%',
-        height: 200,
-        resizeMode: 'cover',
-        marginVertical: 20,
+        height: 300, // Adjusted height to display full image
+        resizeMode: 'contain', // Changed to contain to avoid cropping
+        marginBottom: 20,
     },
     createPostButton: {
         backgroundColor: '#4CAF50',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,
-        marginTop: 10,
+        marginBottom: 20,
     },
     createPostButtonText: {
         color: '#fff',
