@@ -165,7 +165,7 @@ const Connect = ({ navigation }: ConnectProps) => {
     );
 
     return (
-        <ImageBackground source={require('C:/Users/Calvin/Desktop/Orbital/crossroads/assets/orbital connect background.png')} style={styles.background}>
+        <ImageBackground source={require('../../crossroads/assets/orbital connect background.png')} style={styles.background}>
             <View style={styles.container}>
                 {profiles.length > 0 ? (
                     renderProfile(profiles[currentIndex])
