@@ -35,7 +35,7 @@ const Profile = ({ navigation }: RouterProps) => {
     const profileImage = gridImages[0];
 
     return (
-        <ImageBackground source={require('C:/Users/Calvin/Desktop/Orbital/crossroads/assets/profile-bg.png')} style={styles.background}>
+        <ImageBackground source={require('../../assets/profile-bg.png')} style={styles.background}>
             <View style={styles.container}>
                 <View style={styles.profileContainer}>
                     {profileImage ? (

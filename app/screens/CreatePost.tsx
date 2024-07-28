@@ -77,7 +77,7 @@ const CreatePost = ({ navigation }: RouterProps) => {
     };
 
     return (
-        <ImageBackground source={require('C:/Users/Calvin/Desktop/Orbital/crossroads/assets/profile-bg.png')} style={styles.background}>
+        <ImageBackground source={require('../../assets/profile-bg.png')} style={styles.background}>
             <ScrollView contentContainerStyle={styles.container}>
                 <TouchableOpacity style={styles.imageUploadButton} onPress={handleImageUpload}>
                     <Text style={styles.imageUploadButtonText}>Upload Image</Text>
@@ -133,8 +133,8 @@ const styles = StyleSheet.create({
     },
     postImage: {
         width: '100%',
-        height: 300, // Adjusted height to display full image
-        resizeMode: 'contain', // Changed to contain to avoid cropping
+        height: 300,
+        resizeMode: 'contain',
         marginBottom: 20,
     },
     createPostButton: {

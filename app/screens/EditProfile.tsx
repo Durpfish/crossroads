@@ -114,7 +114,7 @@ const EditProfile = ({ navigation }: RouterProps) => {
     };
 
     return (
-        <ImageBackground source={require('C:/Users/Calvin/Desktop/Orbital/crossroads/assets/profile-bg.png')} style={styles.background}>
+        <ImageBackground source={require('../../assets/profile-bg.png')} style={styles.background}>
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     profileContainer: {
         marginTop: -120,
         width: '100%',
-        paddingVertical: 10,
+        paddingVertical: 20,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#f5f5f5',
@@ -206,7 +206,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     profileImage: {
-        marginTop: 30,
         width: 100,
         height: 100,
         borderRadius: 50,

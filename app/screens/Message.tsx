@@ -106,7 +106,7 @@ const MessageScreen = ({ navigation, route }: RouterProps) => {
   };
 
   return (
-    <ImageBackground source={require('C:/Users/Calvin/Desktop/Orbital/crossroads/assets/chatwallpaper.jpg')} style={styles.background}>
+    <ImageBackground source={require('../../assets/chatwallpaper.jpg')} style={styles.background}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

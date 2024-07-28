@@ -80,17 +80,17 @@ const styles = StyleSheet.create({
     headerContainer: {
         width: '100%',
         backgroundColor: '#72bcd4',
-        paddingVertical: 25,
+        paddingVertical: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },
     headerText: {
         color: 'white',
-        fontSize: 24,
+        fontSize: 22,
     },
     contentContainer: {
         padding: 10,
-        paddingBottom: 80, // Added padding to avoid overlap with navigation bar
+        paddingBottom: 80, 
     },
     postContainer: {
         marginBottom: 20,
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     },
     postImage: {
         width: '100%',
-        height: 400, // Adjusted height to display full image
+        height: 400, 
         resizeMode: 'cover',
         borderRadius: 10,
     },
