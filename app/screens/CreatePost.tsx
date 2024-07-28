@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, ImageBackground } from 'react-native';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -77,31 +77,36 @@ const CreatePost = ({ navigation }: RouterProps) => {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <TouchableOpacity style={styles.imageUploadButton} onPress={handleImageUpload}>
-                <Text style={styles.imageUploadButtonText}>Upload Image</Text>
-            </TouchableOpacity>
-            {postImage && <Image source={{ uri: postImage }} style={styles.postImage} />}
-            <TextInput
-                style={styles.captionInput}
-                placeholder="Write a caption..."
-                value={caption}
-                onChangeText={setCaption}
-            />
-            <TouchableOpacity style={styles.createPostButton} onPress={handleCreatePost}>
-                <Text style={styles.createPostButtonText}>Share</Text>
-            </TouchableOpacity>
-        </ScrollView>
+        <ImageBackground source={require('C:/Users/Calvin/Desktop/Orbital/crossroads/assets/profile-bg.png')} style={styles.background}>
+            <ScrollView contentContainerStyle={styles.container}>
+                <TouchableOpacity style={styles.imageUploadButton} onPress={handleImageUpload}>
+                    <Text style={styles.imageUploadButtonText}>Upload Image</Text>
+                </TouchableOpacity>
+                {postImage && <Image source={{ uri: postImage }} style={styles.postImage} />}
+                <TextInput
+                    style={styles.captionInput}
+                    placeholder="Write a caption..."
+                    value={caption}
+                    onChangeText={setCaption}
+                />
+                <TouchableOpacity style={styles.createPostButton} onPress={handleCreatePost}>
+                    <Text style={styles.createPostButtonText}>Share</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </ImageBackground>
     );
 };
 
 const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+        resizeMode: 'cover',
+    },
     container: {
         flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#f5f5f5',
     },
     captionInput: {
         width: '100%',

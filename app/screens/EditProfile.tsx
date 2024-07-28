@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, ScrollView, Platform, ImageBackground } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE, FIREBASE_STORAGE } from '../../firebaseConfig';
 import { NavigationProp } from '@react-navigation/native';
@@ -114,27 +114,29 @@ const EditProfile = ({ navigation }: RouterProps) => {
     };
 
     return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                <ProfileHeader profileImage={gridImages[0]} profileName={profileName} age={age} />
-                <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
-                <View style={styles.aboutMeContainer}>
-                    <TextInput
-                        style={styles.aboutMeInput}
-                        placeholder="Tell us about yourself..."
-                        value={aboutMe}
-                        onChangeText={setAboutMe}
-                        multiline={true}
-                    />
-                    <TouchableOpacity onPress={handleSaveAboutMe} style={styles.saveButton}>
-                        <Text style={styles.saveButtonText}>Save</Text>
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
-        </KeyboardAvoidingView>
+        <ImageBackground source={require('C:/Users/Calvin/Desktop/Orbital/crossroads/assets/profile-bg.png')} style={styles.background}>
+            <KeyboardAvoidingView
+                style={styles.container}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+                <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                    <ProfileHeader profileImage={gridImages[0]} profileName={profileName} age={age} />
+                    <ImageGrid gridImages={gridImages} handleImageUpload={handleImageUpload} />
+                    <View style={styles.aboutMeContainer}>
+                        <TextInput
+                            style={styles.aboutMeInput}
+                            placeholder="Tell us about yourself..."
+                            value={aboutMe}
+                            onChangeText={setAboutMe}
+                            multiline={true}
+                        />
+                        <TouchableOpacity onPress={handleSaveAboutMe} style={styles.saveButton}>
+                            <Text style={styles.saveButtonText}>Save</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </ImageBackground>
     );
 };
 
@@ -172,6 +174,10 @@ const ImageGrid = ({ gridImages, handleImageUpload }: { gridImages: string[], ha
 };
 
 const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+        resizeMode: 'cover',
+    },
     container: {
         flex: 1,
     },
@@ -182,7 +188,7 @@ const styles = StyleSheet.create({
         paddingTop: 80,
     },
     profileContainer: {
-        marginTop: -110,
+        marginTop: -120,
         width: '100%',
         paddingVertical: 10,
         justifyContent: 'center',
@@ -200,6 +206,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     profileImage: {
+        marginTop: 30,
         width: 100,
         height: 100,
         borderRadius: 50,
