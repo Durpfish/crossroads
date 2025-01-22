@@ -20,7 +20,7 @@ Expo
 Firebase
 Android Emulator 
 
-## Installation:
+# Installation:
 Npm & Node.js
 Installation command: 
 sudo npm install -g npm
@@ -29,7 +29,7 @@ sudo npm install -g npm
 node -v
 npm -v
 
-Expo
+## Expo
 Installation command: 
 sudo npx install-expo-modules@latest
 
@@ -37,19 +37,18 @@ Check if installed:
 expo --version
 
 
-Firebase
+## Firebase
 Installation commands: 
 npx expo install firebase
 npx install @react-navigation/native @react-navigation/native-stack
 npx expo install react-native-screens react-native-safe-area-context
 
-Android Emulator 
+## Android Emulator 
 Installation link: 
 https://developer.android.com/studio
 
 
-
-Running the Application:
+## Running the Application:
 
 Installation method #1:
 Download crossroads apk file (delete old version if any)
@@ -59,14 +58,14 @@ Wait for app to load & run
 
 				OR
 
-Installation method #2:
+# Installation method #2:
 Pull code from GitHub Desktop
 Ensure android emulator is running 
 Run command in terminal: npx expo start
 Press ‘a’ & wait for application to run
 
 
-Testing the Application:
+## Testing the Application:
 Account Creation
 Profile Setup
 Matching feature (create 2 separate accounts and set up profiles; will match based on mutual likes)
