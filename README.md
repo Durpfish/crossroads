@@ -1,3 +1,17 @@
+Login
+After starting the application on an android emulator, you will be directed to a log in page.
+
+Login with user: calvin@calamaribasil.net
+Password: Password
+
+What it does
+CrossRoads is a revolutionary social media app that redefines the way people meet and connect in the digital age. Emphasising spontaneity and organic interactions, 
+CrossRoads leverages real-time location data to facilitate meaningful encounters, foster new relationships, and create lasting memories.
+
+How we built it
+We used a ReactNative and ExpoGo frontend with JavaScript. For backend, we opted for Firebase & Firestore.
+
+
 Dependencies required: 
 Npm
 Node.js
@@ -9,7 +23,6 @@ Installation:
 Npm & Node.js
 Installation command: 
 sudo npm install -g npm
-
 
 Check if installed:
 node -v
